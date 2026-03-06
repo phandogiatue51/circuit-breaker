@@ -1,0 +1,6 @@
+@BrandService_HostAddress = http://localhost:5188
+
+GET {{BrandService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
