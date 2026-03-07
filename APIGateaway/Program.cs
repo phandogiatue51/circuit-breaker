@@ -1,45 +1,17 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using APIGateaway;
+using Clients;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.OpenApi.Models;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using Microsoft.OpenApi.Models;
+using Ocelot.Provider.Polly;
 using Polly;
 using Polly.CircuitBreaker;
-using Clients;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-
-builder.Services.AddHttpClient<BrandServiceClient>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7246");
-})
-.AddPolicyHandler(GetCircuitBreakerPolicy(
-    CircuitBreakerRegistry.BrandServiceManualControl,
-    CircuitBreakerRegistry.BrandServiceStateProvider,
-    "BRAND-SERVICE"
-));
-
-builder.Services.AddHttpClient<CategoryServiceClient>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7246");
-})
-.AddPolicyHandler(GetCircuitBreakerPolicy(
-    CircuitBreakerRegistry.CategoryServiceManualControl,
-    CircuitBreakerRegistry.CategoryServiceStateProvider,
-    "CATEGORY-SERVICE"
-));
-
-builder.Services.AddHttpClient<ProductServiceClient>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7246");
-})
-.AddPolicyHandler(GetCircuitBreakerPolicy(
-    CircuitBreakerRegistry.ProductServiceManualControl,
-    CircuitBreakerRegistry.ProductServiceStateProvider,
-    "PRODUCT-SERVICE"
-));
 
 builder.Services.AddScoped<BrandServiceClient>();
 builder.Services.AddScoped<CategoryServiceClient>();
@@ -50,12 +22,6 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
     CircuitBreakerStateProvider stateProvider,
     string serviceName)
 {
-    Console.WriteLine($"=== CREATING POLICY FOR {serviceName} ===");
-    Console.WriteLine($"ManualControl Hash received: {manualControl?.GetHashCode()}");
-    Console.WriteLine($"StateProvider Hash received: {stateProvider?.GetHashCode()}");
-    Console.WriteLine($"Expected Brand Hash: {CircuitBreakerRegistry.BrandServiceManualControl?.GetHashCode()}");
-    Console.WriteLine($"Expected Category Hash: {CircuitBreakerRegistry.CategoryServiceManualControl?.GetHashCode()}");
-
     var options = new CircuitBreakerStrategyOptions<HttpResponseMessage>
     {
         FailureRatio = 0.2,
@@ -75,7 +41,7 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
         {
             Console.WriteLine("=============================================");
             Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
-            Console.WriteLine($"🔴 {serviceName} CIRCUIT OPENED");
+            Console.WriteLine($"{serviceName} CIRCUIT OPENED");
             Console.WriteLine($"IsManual: {args.IsManual}");
             Console.WriteLine($"ManualControl Hash in event: {manualControl?.GetHashCode()}");
             Console.WriteLine("=============================================");
@@ -84,13 +50,13 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
 
         OnClosed = (args) =>
         {
-            Console.WriteLine($"✅ {serviceName} CIRCUIT CLOSED");
+            Console.WriteLine($"{serviceName} CIRCUIT CLOSED");
             return ValueTask.CompletedTask;
         },
 
         OnHalfOpened = (args) =>
         {
-            Console.WriteLine($"⚠️ {serviceName} CIRCUIT HALF-OPEN");
+            Console.WriteLine($"{serviceName} CIRCUIT HALF-OPEN");
             return ValueTask.CompletedTask;
         }
     };
@@ -100,9 +66,35 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
         .Build()
         .AsAsyncPolicy();
 
-    Console.WriteLine($"Policy created with ManualControl Hash: {manualControl?.GetHashCode()}");
     return policy;
 }
+
+var policyRegistry = builder.Services.AddPolicyRegistry();
+
+policyRegistry.Add(
+    "BRAND-SERVICE-OCELOT",
+    GetCircuitBreakerPolicy(
+        CircuitBreakerRegistry.BrandServiceManualControl,
+        CircuitBreakerRegistry.BrandServiceStateProvider,
+        "BRAND-SERVICE-OCELOT"
+    ));
+
+policyRegistry.Add(
+    "CATEGORY-SERVICE-OCELOT",
+    GetCircuitBreakerPolicy(
+        CircuitBreakerRegistry.CategoryServiceManualControl,
+        CircuitBreakerRegistry.CategoryServiceStateProvider,
+        "CATEGORY-SERVICE-OCELOT"
+    ));
+
+policyRegistry.Add(
+    "PRODUCT-SERVICE-OCELOT",
+    GetCircuitBreakerPolicy(
+        CircuitBreakerRegistry.ProductServiceManualControl,
+        CircuitBreakerRegistry.ProductServiceStateProvider,
+        "PRODUCT-SERVICE-OCELOT"
+    ));
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -135,7 +127,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-builder.Services.AddOcelot(builder.Configuration);
+builder.Services.AddOcelot(builder.Configuration).AddPolly(); 
 
 builder.Services.AddCors(options =>
 {

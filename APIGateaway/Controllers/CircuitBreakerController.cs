@@ -88,7 +88,7 @@ namespace APIGateaway.Controllers
         {
             await CircuitBreakerRegistry.ProductServiceManualControl.IsolateAsync();
 
-            var finalState = CircuitBreakerRegistry.BrandServiceStateProvider.CircuitState.ToString();
+            var finalState = CircuitBreakerRegistry.ProductServiceStateProvider.CircuitState.ToString();
 
             return Ok(new
             {
@@ -103,7 +103,7 @@ namespace APIGateaway.Controllers
         {
             await CircuitBreakerRegistry.ProductServiceManualControl.CloseAsync();
 
-            var finalState = CircuitBreakerRegistry.BrandServiceStateProvider.CircuitState.ToString();
+            var finalState = CircuitBreakerRegistry.ProductServiceStateProvider.CircuitState.ToString();
 
             return Ok(new
             {
@@ -129,6 +129,12 @@ namespace APIGateaway.Controllers
                     State = CircuitBreakerRegistry.CategoryServiceStateProvider.CircuitState.ToString(),
                     IsManuallyControlled = true,
                     ManualControlHash = CircuitBreakerRegistry.CategoryServiceManualControl.GetHashCode()
+                },
+                ProductService = new
+                {
+                    State = CircuitBreakerRegistry.ProductServiceStateProvider.CircuitState.ToString(),
+                    IsManuallyControlled = true,
+                    ManualControlHash = CircuitBreakerRegistry.ProductServiceManualControl.GetHashCode()
                 }
             });
         }
@@ -151,6 +157,13 @@ namespace APIGateaway.Controllers
                     ManualControlHash = CircuitBreakerRegistry.CategoryServiceManualControl?.GetHashCode(),
                     StateProviderExists = CircuitBreakerRegistry.CategoryServiceStateProvider != null,
                     CurrentState = CircuitBreakerRegistry.CategoryServiceStateProvider?.CircuitState.ToString() ?? "null"
+                },
+                Product = new
+                {
+                    ManualControlExists = CircuitBreakerRegistry.ProductServiceManualControl != null,
+                    ManualControlHash = CircuitBreakerRegistry.ProductServiceManualControl?.GetHashCode(),
+                    StateProviderExists = CircuitBreakerRegistry.ProductServiceStateProvider != null,
+                    CurrentState = CircuitBreakerRegistry.ProductServiceStateProvider?.CircuitState.ToString() ?? "null"
                 }
             });
         }

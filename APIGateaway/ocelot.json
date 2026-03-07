@@ -15,6 +15,15 @@
         "AuthenticationProviderKey": null,
         "AllowedScopes": []
       },
+      "QoSOptions": {
+        "BreakDuration": 10000,
+        "MinimumThroughput": 3,
+        "FailureRatio": 0.2,
+        "SamplingDuration": 30000,
+        "Timeout": 5000,
+        "UsePolly": true, 
+        "PolicyKey": "BRAND-SERVICE-OCELOT"
+      },
       "SwaggerKey": "brands"
     },
 
@@ -30,8 +39,17 @@
       "UpstreamPathTemplate": "/brands/{everything}",
       "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer", 
+        "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
+      },
+      "QoSOptions": {
+        "BreakDuration": 10000,
+        "MinimumThroughput": 3,
+        "FailureRatio": 0.2,
+        "SamplingDuration": 30000,
+        "Timeout": 5000,
+        "UsePolly": true,
+        "PolicyKey": "BRAND-SERVICE-OCELOT"
       },
       "SwaggerKey": "brands"
     },
@@ -49,6 +67,15 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": null,
         "AllowedScopes": []
+      },
+      "QoSOptions": {
+        "BreakDuration": 10000,
+        "MinimumThroughput": 3,
+        "FailureRatio": 0.2,
+        "SamplingDuration": 30000,
+        "Timeout": 5000,
+        "UsePolly": true,
+        "PolicyKey": "CATEGORY-SERVICE-OCELOT"
       },
       "RateLimitOptions": {
         "EnableRateLimiting": false,
@@ -71,6 +98,15 @@
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       },
+      "QoSOptions": {
+        "BreakDuration": 10000,
+        "MinimumThroughput": 3,
+        "FailureRatio": 0.2,
+        "SamplingDuration": 30000,
+        "Timeout": 5000,
+        "UsePolly": true,
+        "PolicyKey": "CATEGORY-SERVICE-OCELOT"
+      },
       "RateLimitOptions": {
         "EnableRateLimiting": false,
         "ClientWhitelist": []
@@ -83,7 +119,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7030 
+          "Port": 7030
         }
       ],
       "UpstreamPathTemplate": "/products/{everything}",
@@ -91,6 +127,15 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": null,
         "AllowedScopes": []
+      },
+      "QoSOptions": {
+        "BreakDuration": 10000,
+        "MinimumThroughput": 3,
+        "FailureRatio": 0.2,
+        "SamplingDuration": 30000,
+        "Timeout": 5000,
+        "UsePolly": true,
+        "PolicyKey": "PRODUCT-SERVICE-OCELOT"
       },
       "SwaggerKey": "products"
     },
@@ -108,6 +153,15 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
+      },
+      "QoSOptions": {
+        "BreakDuration": 10000,
+        "MinimumThroughput": 3,
+        "FailureRatio": 0.2,
+        "SamplingDuration": 30000,
+        "Timeout": 5000,
+        "UsePolly": true,
+        "PolicyKey": "PRODUCT-SERVICE-OCELOT"
       },
       "RateLimitOptions": {
         "EnableRateLimiting": false,
