@@ -7,7 +7,6 @@ namespace CategoryService.Controllers
     [Route("api/categories")]
     [ApiController]
     public class CategoryController : ControllerBase
-
     {
         private readonly IService _categoryService;
         private readonly ILogger<CategoryController> _logger;
@@ -23,20 +22,18 @@ namespace CategoryService.Controllers
         {
             try
             {
-                var brands = await _categoryService.GetAllAsync();
-
+                var categories = await _categoryService.GetAllAsync();
                 return Ok(new ApiResponse<IEnumerable<CategoryDto>>
                 {
                     StatusCode = 200,
                     Message = "Lấy danh sách phân loại thành công",
-                    Data = brands
+                    Data = categories
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting all brands");
-
-                return Ok(new ApiResponse<IEnumerable<CategoryDto>>
+                _logger.LogError(ex, "Error getting all categories");
+                return StatusCode(500, new ApiResponse<IEnumerable<CategoryDto>>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy danh sách phân loại",
@@ -50,11 +47,11 @@ namespace CategoryService.Controllers
         {
             try
             {
-                var brand = await _categoryService.GetByIdAsync(id);
+                var category = await _categoryService.GetByIdAsync(id);
 
-                if (brand == null)
+                if (category == null)
                 {
-                    return Ok(new ApiResponse<CategoryDto>
+                    return NotFound(new ApiResponse<CategoryDto>
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy phân loại với ID {id}",
@@ -66,14 +63,13 @@ namespace CategoryService.Controllers
                 {
                     StatusCode = 200,
                     Message = "Lấy thông tin phân loại thành công",
-                    Data = brand
+                    Data = category
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting category {Id}", id);
-
-                return Ok(new ApiResponse<CategoryDto>
+                return StatusCode(500, new ApiResponse<CategoryDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy thông tin phân loại",
@@ -89,7 +85,7 @@ namespace CategoryService.Controllers
             {
                 if (ids == null || !ids.Any())
                 {
-                    return Ok(new ApiResponse<List<CategoryDto>>
+                    return BadRequest(new ApiResponse<List<CategoryDto>>
                     {
                         StatusCode = 400,
                         Message = "Vui lòng cung cấp danh sách ID phân loại",
@@ -98,7 +94,6 @@ namespace CategoryService.Controllers
                 }
 
                 var categories = await _categoryService.GetByIdsAsync(ids);
-
                 return Ok(new ApiResponse<List<CategoryDto>>
                 {
                     StatusCode = 200,
@@ -109,8 +104,7 @@ namespace CategoryService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting categories by ids: {Ids}", string.Join(",", ids));
-
-                return Ok(new ApiResponse<List<CategoryDto>>
+                return StatusCode(500, new ApiResponse<List<CategoryDto>>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy danh sách phân loại",
@@ -125,18 +119,17 @@ namespace CategoryService.Controllers
         {
             try
             {
-                var brand = await _categoryService.CreateAsync(dto);
-
+                var category = await _categoryService.CreateAsync(dto);
                 return Ok(new ApiResponse<CategoryDto>
                 {
                     StatusCode = 201,
                     Message = "Tạo phân loại thành công",
-                    Data = brand
+                    Data = category
                 });
             }
             catch (InvalidOperationException ex)
             {
-                return Ok(new ApiResponse<CategoryDto>
+                return Conflict(new ApiResponse<CategoryDto>
                 {
                     StatusCode = 409,
                     Message = ex.Message,
@@ -146,8 +139,7 @@ namespace CategoryService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating category");
-
-                return Ok(new ApiResponse<BrandDto>
+                return StatusCode(500, new ApiResponse<CategoryDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi tạo phân loại",
@@ -162,11 +154,11 @@ namespace CategoryService.Controllers
         {
             try
             {
-                var brand = await _categoryService.UpdateAsync(id, dto);
+                var category = await _categoryService.UpdateAsync(id, dto);
 
-                if (brand == null)
+                if (category == null)
                 {
-                    return Ok(new ApiResponse<CategoryDto>
+                    return NotFound(new ApiResponse<CategoryDto>
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy phân loại với ID {id}",
@@ -178,14 +170,13 @@ namespace CategoryService.Controllers
                 {
                     StatusCode = 200,
                     Message = "Cập nhật phân loại thành công",
-                    Data = brand
+                    Data = category
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating category {Id}", id);
-
-                return Ok(new ApiResponse<CategoryDto>
+                return StatusCode(500, new ApiResponse<CategoryDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi cập nhật phân loại",
@@ -204,7 +195,7 @@ namespace CategoryService.Controllers
 
                 if (!deleted)
                 {
-                    return Ok(new ApiResponse
+                    return NotFound(new ApiResponse
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy phân loại với ID {id}"
@@ -220,8 +211,7 @@ namespace CategoryService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting category {Id}", id);
-
-                return Ok(new ApiResponse
+                return StatusCode(500, new ApiResponse
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi xóa phân loại"

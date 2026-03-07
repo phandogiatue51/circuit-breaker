@@ -15,15 +15,9 @@
         "AuthenticationProviderKey": null,
         "AllowedScopes": []
       },
-      "QoSOptions": {
-        "BreakDuration": 10000,
-        "MinimumThroughput": 3,
-        "FailureRatio": 0.2,
-        "SamplingDuration": 30000,
-        "Timeout": 5000,
-        "UsePolly": true, 
-        "PolicyKey": "BRAND-SERVICE-OCELOT"
-      },
+      "DelegatingHandlers": [
+        "BrandCircuitBreakerHandler"
+      ],
       "SwaggerKey": "brands"
     },
 
@@ -42,15 +36,9 @@
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       },
-      "QoSOptions": {
-        "BreakDuration": 10000,
-        "MinimumThroughput": 3,
-        "FailureRatio": 0.2,
-        "SamplingDuration": 30000,
-        "Timeout": 5000,
-        "UsePolly": true,
-        "PolicyKey": "BRAND-SERVICE-OCELOT"
-      },
+      "DelegatingHandlers": [
+        "BrandCircuitBreakerHandler"
+      ],
       "SwaggerKey": "brands"
     },
     {
@@ -68,15 +56,9 @@
         "AuthenticationProviderKey": null,
         "AllowedScopes": []
       },
-      "QoSOptions": {
-        "BreakDuration": 10000,
-        "MinimumThroughput": 3,
-        "FailureRatio": 0.2,
-        "SamplingDuration": 30000,
-        "Timeout": 5000,
-        "UsePolly": true,
-        "PolicyKey": "CATEGORY-SERVICE-OCELOT"
-      },
+      "DelegatingHandlers": [
+        "CategoryCircuitBreakerHandler"
+      ],
       "RateLimitOptions": {
         "EnableRateLimiting": false,
         "ClientWhitelist": []
@@ -98,15 +80,9 @@
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       },
-      "QoSOptions": {
-        "BreakDuration": 10000,
-        "MinimumThroughput": 3,
-        "FailureRatio": 0.2,
-        "SamplingDuration": 30000,
-        "Timeout": 5000,
-        "UsePolly": true,
-        "PolicyKey": "CATEGORY-SERVICE-OCELOT"
-      },
+      "DelegatingHandlers": [
+        "CategoryCircuitBreakerHandler"
+      ],
       "RateLimitOptions": {
         "EnableRateLimiting": false,
         "ClientWhitelist": []
@@ -128,15 +104,9 @@
         "AuthenticationProviderKey": null,
         "AllowedScopes": []
       },
-      "QoSOptions": {
-        "BreakDuration": 10000,
-        "MinimumThroughput": 3,
-        "FailureRatio": 0.2,
-        "SamplingDuration": 30000,
-        "Timeout": 5000,
-        "UsePolly": true,
-        "PolicyKey": "PRODUCT-SERVICE-OCELOT"
-      },
+      "DelegatingHandlers": [
+        "ProductCircuitBreakerHandler"
+      ],
       "SwaggerKey": "products"
     },
     {
@@ -154,15 +124,9 @@
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       },
-      "QoSOptions": {
-        "BreakDuration": 10000,
-        "MinimumThroughput": 3,
-        "FailureRatio": 0.2,
-        "SamplingDuration": 30000,
-        "Timeout": 5000,
-        "UsePolly": true,
-        "PolicyKey": "PRODUCT-SERVICE-OCELOT"
-      },
+      "DelegatingHandlers": [
+        "ProductCircuitBreakerHandler"
+      ],
       "RateLimitOptions": {
         "EnableRateLimiting": false,
         "ClientWhitelist": []

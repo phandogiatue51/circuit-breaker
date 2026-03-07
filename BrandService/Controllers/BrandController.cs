@@ -7,7 +7,6 @@ namespace BrandService.Controllers
     [Route("api/brands")]
     [ApiController]
     public class BrandController : ControllerBase
-
     {
         private readonly IService _brandService;
         private readonly ILogger<BrandController> _logger;
@@ -24,7 +23,6 @@ namespace BrandService.Controllers
             try
             {
                 var brands = await _brandService.GetAllAsync();
-
                 return Ok(new ApiResponse<IEnumerable<BrandDto>>
                 {
                     StatusCode = 200,
@@ -35,8 +33,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all brands");
-
-                return Ok(new ApiResponse<IEnumerable<BrandDto>>
+                return StatusCode(500, new ApiResponse<IEnumerable<BrandDto>>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy danh sách thương hiệu",
@@ -54,7 +51,7 @@ namespace BrandService.Controllers
 
                 if (brand == null)
                 {
-                    return Ok(new ApiResponse<BrandDto>
+                    return NotFound(new ApiResponse<BrandDto>
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy thương hiệu với ID {id}",
@@ -72,8 +69,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting brand {Id}", id);
-
-                return Ok(new ApiResponse<BrandDto>
+                return StatusCode(500, new ApiResponse<BrandDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy thông tin thương hiệu",
@@ -89,7 +85,6 @@ namespace BrandService.Controllers
             try
             {
                 var brand = await _brandService.CreateAsync(dto);
-
                 return Ok(new ApiResponse<BrandDto>
                 {
                     StatusCode = 201,
@@ -99,7 +94,7 @@ namespace BrandService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Ok(new ApiResponse<BrandDto>
+                return Conflict(new ApiResponse<BrandDto>
                 {
                     StatusCode = 409,
                     Message = ex.Message,
@@ -109,8 +104,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating brand");
-
-                return Ok(new ApiResponse<BrandDto>
+                return StatusCode(500, new ApiResponse<BrandDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi tạo thương hiệu",
@@ -129,7 +123,7 @@ namespace BrandService.Controllers
 
                 if (brand == null)
                 {
-                    return Ok(new ApiResponse<BrandDto>
+                    return NotFound(new ApiResponse<BrandDto>
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy thương hiệu với ID {id}",
@@ -147,8 +141,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating brand {Id}", id);
-
-                return Ok(new ApiResponse<BrandDto>
+                return StatusCode(500, new ApiResponse<BrandDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi cập nhật thương hiệu",
@@ -167,7 +160,7 @@ namespace BrandService.Controllers
 
                 if (!deleted)
                 {
-                    return Ok(new ApiResponse
+                    return NotFound(new ApiResponse
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy thương hiệu với ID {id}"
@@ -183,8 +176,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting brand {Id}", id);
-
-                return Ok(new ApiResponse
+                return StatusCode(500, new ApiResponse
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi xóa thương hiệu"

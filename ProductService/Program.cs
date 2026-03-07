@@ -46,10 +46,11 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
 {
     var options = new CircuitBreakerStrategyOptions<HttpResponseMessage>
     {
-        FailureRatio = 0.2,
+        MinimumThroughput = 3,
+        FailureRatio = 0.5,
         SamplingDuration = TimeSpan.FromSeconds(30),
-        MinimumThroughput = 10,
         BreakDuration = TimeSpan.FromSeconds(15),
+
         ManualControl = manualControl,
         StateProvider = stateProvider,
         ShouldHandle = new PredicateBuilder<HttpResponseMessage>()

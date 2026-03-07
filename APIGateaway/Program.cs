@@ -5,9 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using Ocelot.Provider.Polly;
-using Polly;
-using Polly.CircuitBreaker;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,85 +13,11 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<BrandServiceClient>();
 builder.Services.AddScoped<CategoryServiceClient>();
 builder.Services.AddScoped<ProductServiceClient>();
+builder.Services.AddSingleton<CircuitBreakerPolicyProvider>();
 
-static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
-    CircuitBreakerManualControl manualControl,
-    CircuitBreakerStateProvider stateProvider,
-    string serviceName)
-{
-    var options = new CircuitBreakerStrategyOptions<HttpResponseMessage>
-    {
-        FailureRatio = 0.2,
-        SamplingDuration = TimeSpan.FromSeconds(30),
-        MinimumThroughput = 10,
-        BreakDuration = TimeSpan.FromSeconds(15),
-
-        ManualControl = manualControl,
-        StateProvider = stateProvider,
-
-        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-            .Handle<HttpRequestException>()
-            .Handle<TimeoutException>()
-            .HandleResult(response => !response.IsSuccessStatusCode),
-
-        OnOpened = (args) =>
-        {
-            Console.WriteLine("=============================================");
-            Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
-            Console.WriteLine($"{serviceName} CIRCUIT OPENED");
-            Console.WriteLine($"IsManual: {args.IsManual}");
-            Console.WriteLine($"ManualControl Hash in event: {manualControl?.GetHashCode()}");
-            Console.WriteLine("=============================================");
-            return ValueTask.CompletedTask;
-        },
-
-        OnClosed = (args) =>
-        {
-            Console.WriteLine($"{serviceName} CIRCUIT CLOSED");
-            return ValueTask.CompletedTask;
-        },
-
-        OnHalfOpened = (args) =>
-        {
-            Console.WriteLine($"{serviceName} CIRCUIT HALF-OPEN");
-            return ValueTask.CompletedTask;
-        }
-    };
-
-    var policy = new ResiliencePipelineBuilder<HttpResponseMessage>()
-        .AddCircuitBreaker(options)
-        .Build()
-        .AsAsyncPolicy();
-
-    return policy;
-}
-
-var policyRegistry = builder.Services.AddPolicyRegistry();
-
-policyRegistry.Add(
-    "BRAND-SERVICE-OCELOT",
-    GetCircuitBreakerPolicy(
-        CircuitBreakerRegistry.BrandServiceManualControl,
-        CircuitBreakerRegistry.BrandServiceStateProvider,
-        "BRAND-SERVICE-OCELOT"
-    ));
-
-policyRegistry.Add(
-    "CATEGORY-SERVICE-OCELOT",
-    GetCircuitBreakerPolicy(
-        CircuitBreakerRegistry.CategoryServiceManualControl,
-        CircuitBreakerRegistry.CategoryServiceStateProvider,
-        "CATEGORY-SERVICE-OCELOT"
-    ));
-
-policyRegistry.Add(
-    "PRODUCT-SERVICE-OCELOT",
-    GetCircuitBreakerPolicy(
-        CircuitBreakerRegistry.ProductServiceManualControl,
-        CircuitBreakerRegistry.ProductServiceStateProvider,
-        "PRODUCT-SERVICE-OCELOT"
-    ));
-
+builder.Services.AddTransient<BrandCircuitBreakerHandler>();
+builder.Services.AddTransient<CategoryCircuitBreakerHandler>();
+builder.Services.AddTransient<ProductCircuitBreakerHandler>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -127,7 +50,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-builder.Services.AddOcelot(builder.Configuration).AddPolly(); 
+
+builder.Services.AddOcelot(builder.Configuration)
+    .AddDelegatingHandler<BrandCircuitBreakerHandler>()
+    .AddDelegatingHandler<CategoryCircuitBreakerHandler>()
+    .AddDelegatingHandler<ProductCircuitBreakerHandler>();
 
 builder.Services.AddCors(options =>
 {
@@ -158,14 +85,6 @@ app.UseSwaggerForOcelotUI(opt =>
     opt.PathToSwaggerGenerator = "/swagger/docs";
 });
 
-app.MapWhen(context =>
-    context.Request.Path.StartsWithSegments("/brands") ||
-    context.Request.Path.StartsWithSegments("/categories") ||
-    context.Request.Path.StartsWithSegments("/products") ||
-    context.Request.Path.StartsWithSegments("/auth"),
-    appBuilder =>
-    {
-        appBuilder.UseOcelot().Wait();
-    });
+app.UseOcelot().Wait();
 
 app.Run();

@@ -7,7 +7,6 @@ namespace ProductService.Controllers
     [Route("api/products")]
     [ApiController]
     public class ProductController : ControllerBase
-
     {
         private readonly IService _productService;
         private readonly ILogger<ProductController> _logger;
@@ -24,7 +23,6 @@ namespace ProductService.Controllers
             try
             {
                 var products = await _productService.GetAllAsync();
-
                 return Ok(new ApiResponse<IEnumerable<ProductDto>>
                 {
                     StatusCode = 200,
@@ -35,8 +33,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all products");
-
-                return Ok(new ApiResponse<IEnumerable<ProductDto>>
+                return StatusCode(500, new ApiResponse<IEnumerable<ProductDto>>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy danh sách sản phẩm",
@@ -51,12 +48,11 @@ namespace ProductService.Controllers
             try
             {
                 var products = await _productService.GetByBrandIdAsync(brandId);
-
                 return Ok(new ApiResponse<IEnumerable<ProductDto>>
                 {
                     StatusCode = 200,
                     Message = products.Any()
-                        ? $"Lấy sản phẩm theo thương hiệu thành công"
+                        ? "Lấy sản phẩm theo thương hiệu thành công"
                         : $"Không tìm thấy sản phẩm nào cho thương hiệu ID {brandId}",
                     Data = products
                 });
@@ -64,8 +60,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting products by brand {BrandId}", brandId);
-
-                return Ok(new ApiResponse<IEnumerable<ProductDto>>
+                return StatusCode(500, new ApiResponse<IEnumerable<ProductDto>>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy sản phẩm theo thương hiệu",
@@ -80,12 +75,11 @@ namespace ProductService.Controllers
             try
             {
                 var products = await _productService.GetByCategoryIdAsync(categoryId);
-
                 return Ok(new ApiResponse<IEnumerable<ProductDto>>
                 {
                     StatusCode = 200,
                     Message = products.Any()
-                        ? $"Lấy sản phẩm theo danh mục thành công"
+                        ? "Lấy sản phẩm theo danh mục thành công"
                         : $"Không tìm thấy sản phẩm nào cho danh mục ID {categoryId}",
                     Data = products
                 });
@@ -93,8 +87,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting products by category {CategoryId}", categoryId);
-
-                return Ok(new ApiResponse<IEnumerable<ProductDto>>
+                return StatusCode(500, new ApiResponse<IEnumerable<ProductDto>>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy sản phẩm theo danh mục",
@@ -109,10 +102,9 @@ namespace ProductService.Controllers
             try
             {
                 var product = await _productService.GetByIdAsync(id);
-
                 if (product == null)
                 {
-                    return Ok(new ApiResponse<ProductDto>
+                    return NotFound(new ApiResponse<ProductDto>
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy sản phẩm với ID {id}",
@@ -130,8 +122,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting product {Id}", id);
-
-                return Ok(new ApiResponse<ProductDto>
+                return StatusCode(500, new ApiResponse<ProductDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi lấy thông tin sản phẩm",
@@ -147,7 +138,6 @@ namespace ProductService.Controllers
             try
             {
                 var product = await _productService.CreateAsync(dto);
-
                 return Ok(new ApiResponse<ProductDto>
                 {
                     StatusCode = 201,
@@ -157,7 +147,7 @@ namespace ProductService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Ok(new ApiResponse<ProductDto>
+                return BadRequest(new ApiResponse<ProductDto>
                 {
                     StatusCode = 400,
                     Message = ex.Message,
@@ -167,8 +157,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating product");
-
-                return Ok(new ApiResponse<ProductDto>
+                return StatusCode(500, new ApiResponse<ProductDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi tạo sản phẩm",
@@ -184,10 +173,9 @@ namespace ProductService.Controllers
             try
             {
                 var product = await _productService.UpdateAsync(id, dto);
-
                 if (product == null)
                 {
-                    return Ok(new ApiResponse<ProductDto>
+                    return NotFound(new ApiResponse<ProductDto>
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy sản phẩm với ID {id}",
@@ -204,7 +192,7 @@ namespace ProductService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Ok(new ApiResponse<ProductDto>
+                return BadRequest(new ApiResponse<ProductDto>
                 {
                     StatusCode = 400,
                     Message = ex.Message,
@@ -214,8 +202,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating product {Id}", id);
-
-                return Ok(new ApiResponse<ProductDto>
+                return StatusCode(500, new ApiResponse<ProductDto>
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi cập nhật sản phẩm",
@@ -231,10 +218,9 @@ namespace ProductService.Controllers
             try
             {
                 var deleted = await _productService.DeleteAsync(id);
-
                 if (!deleted)
                 {
-                    return Ok(new ApiResponse
+                    return NotFound(new ApiResponse
                     {
                         StatusCode = 404,
                         Message = $"Không tìm thấy sản phẩm với ID {id}"
@@ -250,8 +236,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting product {Id}", id);
-
-                return Ok(new ApiResponse
+                return StatusCode(500, new ApiResponse
                 {
                     StatusCode = 500,
                     Message = "Có lỗi khi xóa sản phẩm"
