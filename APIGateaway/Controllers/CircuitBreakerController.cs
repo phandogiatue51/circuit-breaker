@@ -113,6 +113,12 @@ namespace APIGateaway.Controllers
             });
         }
 
+        [HttpGet("ping")]
+        public IActionResult Ping()
+        {
+            return Ok("CircuitBreaker controller is working!");
+        }
+
         [HttpGet("status")]
         public IActionResult GetStatus()
         {

@@ -149,6 +149,19 @@
         "EnableRateLimiting": false,
         "ClientWhitelist": []
       }
+    },
+    {
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7246
+        }
+      ],
+      "UpstreamPathTemplate": "/internal/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "Priority": 1
     }
   ],
   "SwaggerEndPoints": [

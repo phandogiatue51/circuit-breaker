@@ -57,13 +57,19 @@ namespace APIGateaway
 
                 OnClosed = (args) =>
                 {
+                    Console.WriteLine($"=============================================");
+                    Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
                     Console.WriteLine($"{serviceName} CIRCUIT CLOSED");
+                    Console.WriteLine($"=============================================");
                     return ValueTask.CompletedTask;
                 },
 
                 OnHalfOpened = (args) =>
                 {
+                    Console.WriteLine($"=============================================");
+                    Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
                     Console.WriteLine($"{serviceName} CIRCUIT HALF-OPEN");
+                    Console.WriteLine($"=============================================");
                     return ValueTask.CompletedTask;
                 }
             };
