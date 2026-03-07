@@ -18,7 +18,6 @@ namespace ProductService.Controllers
             _logger = logger;
         }
 
-        // GET: api/products
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<ProductDto>>>> GetAll()
         {
@@ -46,7 +45,6 @@ namespace ProductService.Controllers
             }
         }
 
-        // GET: api/products/brand/5
         [HttpGet("brand/{brandId}")]
         public async Task<ActionResult<ApiResponse<IEnumerable<ProductDto>>>> GetByBrand(int brandId)
         {
@@ -76,7 +74,6 @@ namespace ProductService.Controllers
             }
         }
 
-        // GET: api/products/category/5
         [HttpGet("category/{categoryId}")]
         public async Task<ActionResult<ApiResponse<IEnumerable<ProductDto>>>> GetByCategory(int categoryId)
         {
@@ -106,7 +103,6 @@ namespace ProductService.Controllers
             }
         }
 
-        // GET: api/products/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ApiResponse<ProductDto>>> GetById(int id)
         {
@@ -161,7 +157,6 @@ namespace ProductService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Known business logic errors (brand not found, category not found, etc.)
                 return Ok(new ApiResponse<ProductDto>
                 {
                     StatusCode = 400,
@@ -209,7 +204,6 @@ namespace ProductService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Known business logic errors
                 return Ok(new ApiResponse<ProductDto>
                 {
                     StatusCode = 400,

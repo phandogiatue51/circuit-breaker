@@ -1,70 +1,73 @@
-﻿using Clients;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Polly;
-using Polly.Extensions.Http;
 using ProductService;
 using System.Text;
+using Polly;
+using Polly.CircuitBreaker;
+using Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ProductDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
-{
-    return HttpPolicyExtensions
-        .HandleTransientHttpError()
-        .Or<TimeoutException>()
-        .CircuitBreakerAsync(
-            handledEventsAllowedBeforeBreaking: 2,
-            durationOfBreak: TimeSpan.FromSeconds(10),
-            onBreak: (outcome, duration) =>
-            {
-                Console.WriteLine("=============================================");
-                Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
-                Console.WriteLine("CIRCUIT BREAKER TRIPPED!");
-                Console.WriteLine($"Duration: {duration.TotalSeconds} seconds");
-                Console.WriteLine($"Reason: {outcome.Exception?.Message ?? outcome.Result?.StatusCode.ToString()}");
-                Console.WriteLine("=============================================");
-            },
-            onReset: () =>
-            {
-                Console.WriteLine("=============================================");
-                Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
-                Console.WriteLine("CIRCUIT BREAKER RESET!");
-                Console.WriteLine("=============================================");
-            },
-            onHalfOpen: () =>
-            {
-                Console.WriteLine("=============================================");
-                Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
-                Console.WriteLine("CIRCUIT HALF-OPEN");
-                Console.WriteLine("=============================================");
-            }
-        );
-}
-
 builder.Services.AddHttpClient<BrandServiceClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7197");
+    client.BaseAddress = new Uri("https://localhost:7246");
 })
-.AddPolicyHandler(GetCircuitBreakerPolicy()); 
+.AddPolicyHandler(GetCircuitBreakerPolicy(
+    CircuitBreakerRegistry.BrandServiceManualControl,
+    CircuitBreakerRegistry.BrandServiceStateProvider,
+    "BRAND-SERVICE-FROM-PRODUCT"
+));
 
 builder.Services.AddHttpClient<CategoryServiceClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7067");
+    client.BaseAddress = new Uri("https://localhost:7246"); 
 })
-.AddPolicyHandler(GetCircuitBreakerPolicy());
+.AddPolicyHandler(GetCircuitBreakerPolicy(
+    CircuitBreakerRegistry.CategoryServiceManualControl,
+    CircuitBreakerRegistry.CategoryServiceStateProvider,
+    "CATEGORY-SERVICE-FROM-PRODUCT"
+));
 
-// SINGLE Swagger configuration with JWT support
+builder.Services.AddScoped<BrandServiceClient>();
+builder.Services.AddScoped<CategoryServiceClient>();
+
+builder.Services.AddScoped<Repository>();
+builder.Services.AddScoped<IService, Service>();
+
+static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
+    CircuitBreakerManualControl manualControl,
+    CircuitBreakerStateProvider stateProvider,
+    string serviceName)
+{
+    var options = new CircuitBreakerStrategyOptions<HttpResponseMessage>
+    {
+        FailureRatio = 0.2,
+        SamplingDuration = TimeSpan.FromSeconds(30),
+        MinimumThroughput = 10,
+        BreakDuration = TimeSpan.FromSeconds(15),
+        ManualControl = manualControl,
+        StateProvider = stateProvider,
+        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+            .Handle<HttpRequestException>()
+            .Handle<TimeoutException>()
+            .HandleResult(response => !response.IsSuccessStatusCode)
+    };
+
+    return new ResiliencePipelineBuilder<HttpResponseMessage>()
+        .AddCircuitBreaker(options)
+        .Build()
+        .AsAsyncPolicy();
+}
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService", Version = "v1" });
 
-    // Add JWT Authentication support to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -89,10 +92,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
-// Register repository and service
-builder.Services.AddScoped<Repository>();
-builder.Services.AddScoped<IService, Service>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

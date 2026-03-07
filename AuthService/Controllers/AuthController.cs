@@ -55,7 +55,6 @@ public class AuthController : ControllerBase
                 });
             }
 
-            // Auto login after registration
             var loginResult = await _iService.LoginAsync(new LoginDto
             {
                 Email = request.Email,

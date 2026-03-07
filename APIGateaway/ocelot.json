@@ -10,16 +10,30 @@
         }
       ],
       "UpstreamPathTemplate": "/brands/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
+        "AuthenticationProviderKey": null,
         "AllowedScopes": []
       },
-      "RateLimitOptions": {
-        "EnableRateLimiting": false,
-        "ClientWhitelist": []
+      "SwaggerKey": "brands"
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/brands/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/brands/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer", 
+        "AllowedScopes": []
       },
-      "SwaggerKey": "brands" // Add this key!
+      "SwaggerKey": "brands"
     },
     {
       "DownstreamPathTemplate": "/api/categories/{everything}",
@@ -31,7 +45,28 @@
         }
       ],
       "UpstreamPathTemplate": "/categories/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "RateLimitOptions": {
+        "EnableRateLimiting": false,
+        "ClientWhitelist": []
+      },
+      "SwaggerKey": "categories"
+    },
+    {
+      "DownstreamPathTemplate": "/api/categories/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7067
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -40,7 +75,24 @@
         "EnableRateLimiting": false,
         "ClientWhitelist": []
       },
-      "SwaggerKey": "categories" // Add this key!
+      "SwaggerKey": "categories"
+    },
+    {
+      "DownstreamPathTemplate": "/api/products/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7030 
+        }
+      ],
+      "UpstreamPathTemplate": "/products/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "products"
     },
     {
       "DownstreamPathTemplate": "/api/products/{everything}",
@@ -52,7 +104,7 @@
         }
       ],
       "UpstreamPathTemplate": "/products/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -61,7 +113,7 @@
         "EnableRateLimiting": false,
         "ClientWhitelist": []
       },
-      "SwaggerKey": "products" // Add this key!
+      "SwaggerKey": "products"
     },
     {
       "DownstreamPathTemplate": "/api/auth/{everything}",
@@ -81,7 +133,7 @@
       }
     }
   ],
-  "SwaggerEndPoints": [ 
+  "SwaggerEndPoints": [
     {
       "Key": "auth",
       "Config": [
@@ -124,9 +176,10 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7426",
+    "BaseUrl": "https://localhost:7246",
     "RateLimitOptions": {
-      "DisableRateLimitHeaders": false,
+      "DisableRateLimitHeaders": true, 
+      "EnableRateLimiting": false, 
       "QuotaExceededMessage": "Quá nhiều request, vui lòng thử lại sau!",
       "HttpStatusCode": 429,
       "ClientIdHeader": "ClientId"

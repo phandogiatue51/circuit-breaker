@@ -9,16 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CategoryDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Update Swagger with JWT support
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "CategoryService", Version = "v1" });
 
-    // Add JWT Authentication support to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -44,11 +41,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Register Repository and Service
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<IService, Service>();
 
-// Add Authentication (important!)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -67,7 +62,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -75,7 +69,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication(); // Make sure this is before Authorization!
+app.UseAuthentication(); 
 app.UseAuthorization();
 app.MapControllers();
 

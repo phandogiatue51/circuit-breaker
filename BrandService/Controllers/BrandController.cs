@@ -99,7 +99,6 @@ namespace BrandService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Brand name already exists
                 return Ok(new ApiResponse<BrandDto>
                 {
                     StatusCode = 409,

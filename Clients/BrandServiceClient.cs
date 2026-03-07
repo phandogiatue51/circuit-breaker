@@ -1,6 +1,7 @@
 ﻿using DTOs;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using Polly.CircuitBreaker;
 
 namespace Clients
 {
@@ -13,13 +14,14 @@ namespace Clients
         {
             _httpClient = httpClient;
             _logger = logger;
+            _httpClient.BaseAddress = new Uri("https://localhost:7246");
         }
 
         public async Task<BrandDto?> GetByIdAsync(int id)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/api/brands/{id}");
+                var response = await _httpClient.GetAsync($"/brands/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -30,7 +32,23 @@ namespace Clients
                     return apiResponse?.Data;
                 }
 
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning("Brand with ID {BrandId} not found", id);
+                    return null;
+                }
+
                 return null;
+            }
+            catch (BrokenCircuitException ex)
+            {
+                _logger.LogError(ex, "Brand service circuit is OPEN or ISOLATED. Unable to call service for ID {BrandId}", id);
+                throw new Exception("Brand service is currently unavailable (circuit open)", ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error calling BrandService for ID {BrandId}", id);
+                throw new Exception("Brand service is unavailable", ex);
             }
             catch (Exception ex)
             {

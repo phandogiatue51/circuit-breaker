@@ -12,7 +12,6 @@ namespace ProductService
             _context = context;
         }
 
-        // Get all products with includes
         public async Task<List<Product>> GetAllAsync()
         {
             return await _context.Products
@@ -21,7 +20,6 @@ namespace ProductService
                 .ToListAsync();
         }
 
-        // Get by ID with includes
         public async Task<Product?> GetByIdAsync(int id)
         {
             return await _context.Products
@@ -29,7 +27,6 @@ namespace ProductService
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        // Get products by brand
         public async Task<List<Product>> GetByBrandIdAsync(int brandId)
         {
             return await _context.Products
@@ -38,7 +35,6 @@ namespace ProductService
                 .ToListAsync();
         }
 
-        // Get products by category
         public async Task<List<Product>> GetByCategoryIdAsync(int categoryId)
         {
             return await _context.Products
@@ -53,14 +49,12 @@ namespace ProductService
             await _context.SaveChangesAsync();
         }
 
-        // Update product
         public async Task UpdateAsync(Product product)
         {
             _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }
 
-        // Delete product
         public async Task DeleteAsync(int id)
         {
             var product = await GetByIdAsync(id);
@@ -71,7 +65,6 @@ namespace ProductService
             }
         }
 
-        // Check if exists
         public async Task<bool> ExistsAsync(int id)
         {
             return await _context.Products.AnyAsync(p => p.Id == id);

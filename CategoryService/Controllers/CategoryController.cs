@@ -136,7 +136,6 @@ namespace CategoryService.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Brand name already exists
                 return Ok(new ApiResponse<CategoryDto>
                 {
                     StatusCode = 409,

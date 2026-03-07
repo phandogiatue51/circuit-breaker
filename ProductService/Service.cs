@@ -44,7 +44,6 @@ namespace ProductService
 
         public async Task<ProductDto> CreateAsync(CreateProductDto dto)
         {
-            // 1. Verify Brand exists (call BrandService)
             BrandDto? brand;
             try
             {
@@ -111,7 +110,6 @@ namespace ProductService
                 ProductCategories = new List<ProductCategory>()
             };
 
-            // 4. Add categories
             foreach (var cat in categories)
             {
                 product.ProductCategories.Add(new ProductCategory
@@ -121,7 +119,6 @@ namespace ProductService
                 });
             }
 
-            // 5. Save to database
             await _repository.CreateAsync(product);
             _logger.LogInformation("Created product: {ProductName} (ID: {ProductId})", product.Name, product.Id);
 
@@ -133,7 +130,6 @@ namespace ProductService
             var product = await _repository.GetByIdAsync(id);
             if (product == null) return null;
 
-            // Update basic info
             if (!string.IsNullOrWhiteSpace(dto.Name))
                 product.Name = dto.Name;
 
@@ -152,7 +148,6 @@ namespace ProductService
             if (dto.IsActive.HasValue)
                 product.IsActive = dto.IsActive.Value;
 
-            // Update brand if changed
             if (dto.BrandId.HasValue && dto.BrandId.Value != product.BrandId)
             {
                 var brand = await _brandClient.GetByIdAsync(dto.BrandId.Value);
@@ -164,22 +159,19 @@ namespace ProductService
                 product.BrandName = brand.Name;
             }
 
-            // Update categories if provided
-            if (dto.CategoryIds != null)  // If they sent ANY category data
+            if (dto.CategoryIds != null)  
             {
                 if (dto.CategoryIds.Any())
                 {
-                    // FILTER OUT NULL VALUES and convert to non-nullable ints
                     var validCategoryIds = dto.CategoryIds
                         .Where(id => id.HasValue)
-                        .Select(id => id!.Value)  // '!' tells compiler it's not null
+                        .Select(id => id!.Value) 
                         .ToList();
 
                     if (validCategoryIds.Any())
                     {
                         var categories = await _categoryClient.GetByIdsAsync(validCategoryIds);
 
-                        // Check if all categories were found
                         if (categories.Count != validCategoryIds.Count)
                         {
                             var foundIds = categories.Select(c => c.Id).ToList();
@@ -187,10 +179,8 @@ namespace ProductService
                             throw new InvalidOperationException($"Categories not found: {string.Join(", ", missingIds)}");
                         }
 
-                        // Remove old categories
                         product.ProductCategories.Clear();
 
-                        // Add new categories
                         foreach (var cat in categories)
                         {
                             product.ProductCategories.Add(new ProductCategory
@@ -202,17 +192,14 @@ namespace ProductService
                     }
                     else
                     {
-                        // All category IDs were null - treat as clear categories
                         product.ProductCategories.Clear();
                     }
                 }
                 else
                 {
-                    // Empty list = remove all categories
                     product.ProductCategories.Clear();
                 }
             }
-            // If CategoryIds is null → keep existing categories (no change)
 
             await _repository.UpdateAsync(product);
             _logger.LogInformation("Updated product ID: {ProductId}", product.Id);

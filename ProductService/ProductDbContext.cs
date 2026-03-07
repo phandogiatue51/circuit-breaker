@@ -14,7 +14,6 @@ namespace ProductService
         {
             base.OnModelCreating(modelBuilder);
 
-            // Product-Category many-to-many configuration
             modelBuilder.Entity<ProductCategory>()
                 .HasKey(pc => new { pc.ProductId, pc.CategoryId });
 
@@ -23,7 +22,6 @@ namespace ProductService
                 .WithMany(p => p.ProductCategories)
                 .HasForeignKey(pc => pc.ProductId);
 
-            // Indexes
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.BrandId);
 
