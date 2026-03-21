@@ -417,6 +417,8 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# App Settings - development/local configs
+# ASP.NET Core
+appsettings.Production.json
+appsettings.Development.json
 appsettings.*.json
-!appsettings.json
+!appsettings.*.example.json
