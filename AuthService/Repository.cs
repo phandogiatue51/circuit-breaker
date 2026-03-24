@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DTOs.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthService;
-
 public class Repository
 {
     private readonly AccountDbContext _context;
@@ -17,15 +17,31 @@ public class Repository
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<Account?> GetByIdAsync(int id)
+    public async Task<Account> GetByIdAsync(int id)
     {
-        return await _context.Accounts.FindAsync(id);
+        var account = await _context.Accounts.FindAsync(id);
+
+        if (account == null)
+            throw new NotFoundException("Account", id); // ⭐ Throw exception
+
+        return account;
     }
 
     public async Task CreateAsync(Account account)
     {
-        await _context.Accounts.AddAsync(account);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.Accounts.AddAsync(account);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            // Kiểm tra duplicate email
+            if (ex.InnerException?.Message.Contains("duplicate") == true)
+                throw new ConflictException("Email đã tồn tại trong hệ thống", "DUPLICATE_EMAIL");
+
+            throw; // Ném lại exception khác
+        }
     }
 
     public async Task UpdateAsync(Account account)
@@ -36,12 +52,9 @@ public class Repository
 
     public async Task DeleteAsync(int id)
     {
-        var account = await _context.Accounts.FindAsync(id);
-        if (account != null)
-        {
-            _context.Accounts.Remove(account);
-            await _context.SaveChangesAsync();
-        }
+        var account = await GetByIdAsync(id);
+        _context.Accounts.Remove(account);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<bool> EmailExistsAsync(string email)

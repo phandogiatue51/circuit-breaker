@@ -16,11 +16,15 @@
         // Categories (multiple)
         public List<CategoryInfoDto> Categories { get; set; } = new();
         public DateTime CreatedAt { get; set; }
-    }
+        public DateTime? UpdatedAt
+        {
+            get; set;
+        }
 
-    public class CategoryInfoDto
-    {
-        public int CategoryId { get; set; }
-        public string CategoryName { get; set; } = string.Empty;
+        public class CategoryInfoDto
+        {
+            public int CategoryId { get; set; }
+            public string CategoryName { get; set; } = string.Empty;
+        }
     }
 }

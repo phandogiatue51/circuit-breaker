@@ -18,5 +18,6 @@ namespace AuthService
         public string PasswordHash { get; set; } = string.Empty;
         public AccountRole Role { get; set; } = AccountRole.Customer;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

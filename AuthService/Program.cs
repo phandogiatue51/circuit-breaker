@@ -1,4 +1,7 @@
 using AuthService;
+using AuthService.Commands;
+using AuthService.Middleware;
+using AuthService.Queries;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,8 +22,13 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthService", Version = "v1" });
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<IService, Service>();
+
+builder.Services.AddScoped<AuthCommandHandler>();
+builder.Services.AddScoped<AuthQueryHandler>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -42,6 +50,8 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseExceptionHandler(); 
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

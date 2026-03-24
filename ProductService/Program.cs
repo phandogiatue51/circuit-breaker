@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AuthService.Middleware;
+using Clients;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProductService;
+using ProductService.Commands;
+using ProductService.Queries;
 using System.Text;
-using Polly;
-using Polly.CircuitBreaker;
-using Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,54 +18,22 @@ builder.Services.AddDbContext<ProductDbContext>(options =>
 builder.Services.AddHttpClient<BrandServiceClient>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7246");
-})
-.AddPolicyHandler(GetCircuitBreakerPolicy(
-    CircuitBreakerRegistry.BrandServiceManualControl,
-    CircuitBreakerRegistry.BrandServiceStateProvider,
-    "BRAND-SERVICE-FROM-PRODUCT"
-));
+});
 
 builder.Services.AddHttpClient<CategoryServiceClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7246"); 
-})
-.AddPolicyHandler(GetCircuitBreakerPolicy(
-    CircuitBreakerRegistry.CategoryServiceManualControl,
-    CircuitBreakerRegistry.CategoryServiceStateProvider,
-    "CATEGORY-SERVICE-FROM-PRODUCT"
-));
+    client.BaseAddress = new Uri("https://localhost:7246");
+});
 
 builder.Services.AddScoped<BrandServiceClient>();
 builder.Services.AddScoped<CategoryServiceClient>();
-
 builder.Services.AddScoped<Repository>();
-builder.Services.AddScoped<IService, Service>();
+builder.Services.AddScoped<ProductCommandHandler>();
+builder.Services.AddScoped<ProductQueryHandler>();
 
-static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(
-    CircuitBreakerManualControl manualControl,
-    CircuitBreakerStateProvider stateProvider,
-    string serviceName)
-{
-    var options = new CircuitBreakerStrategyOptions<HttpResponseMessage>
-    {
-        MinimumThroughput = 3,
-        FailureRatio = 0.5,
-        SamplingDuration = TimeSpan.FromSeconds(30),
-        BreakDuration = TimeSpan.FromSeconds(15),
-
-        ManualControl = manualControl,
-        StateProvider = stateProvider,
-        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-            .Handle<HttpRequestException>()
-            .Handle<TimeoutException>()
-            .HandleResult(response => !response.IsSuccessStatusCode)
-    };
-
-    return new ResiliencePipelineBuilder<HttpResponseMessage>()
-        .AddCircuitBreaker(options)
-        .Build()
-        .AsAsyncPolicy();
-}
+// ⭐ HEALTH CHECK
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ProductDbContext>();
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -115,6 +85,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionHandler>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -124,6 +96,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ⭐ HEALTH CHECK ENDPOINTS
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
+app.MapHealthChecks("/live");
+
 app.MapControllers();
 
 app.Run();
