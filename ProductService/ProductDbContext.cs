@@ -9,6 +9,7 @@ namespace ProductService
 
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<ProductEvent> ProductEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

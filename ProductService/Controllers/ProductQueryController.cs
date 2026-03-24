@@ -1,6 +1,5 @@
 ﻿using DTOs;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Queries;
 
@@ -12,12 +11,14 @@ namespace ProductService.Controllers
     public class ProductQueryController : ControllerBase
     {
         private readonly ProductQueryHandler _queryHandler;
+        private readonly EventStoreService _eventStoreService;
         private readonly ILogger<ProductQueryController> _logger;
 
-        public ProductQueryController(ProductQueryHandler queryHandler, ILogger<ProductQueryController> logger)
+        public ProductQueryController(ProductQueryHandler queryHandler, ILogger<ProductQueryController> logger, EventStoreService eventStoreService)
         {
             _queryHandler = queryHandler;
             _logger = logger;
+            _eventStoreService = eventStoreService;
         }
 
         [HttpGet]
@@ -49,7 +50,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all products");
-                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy danh sách sản phẩm", path));
+                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy danh sách sản phẩm", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -66,7 +67,7 @@ namespace ProductService.Controllers
 
                 if (product == null)
                 {
-                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Không tìm thấy sản phẩm với ID {id}", path));
+                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Không tìm thấy sản phẩm với ID {id}", path, "NOT_FOUND"));
                 }
 
                 return Ok(ApiResponse<ProductDto>.Success(product, path, "Lấy thông tin sản phẩm thành công"));
@@ -74,7 +75,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting product {Id}", id);
-                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi lấy thông tin sản phẩm", path));
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi lấy thông tin sản phẩm", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -96,7 +97,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting products by brand {BrandId}", brandId);
-                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy sản phẩm theo thương hiệu", path));
+                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy sản phẩm theo thương hiệu", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -118,7 +119,30 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting products by category {CategoryId}", categoryId);
-                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy sản phẩm theo danh mục", path));
+                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy sản phẩm theo danh mục", path, "INTERNAL_ERROR"));
+            }
+        }
+
+        [HttpGet("{id}/events")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<List<ProductEvent>>>> GetEvents(int id)
+        {
+            var path = HttpContext.Request.Path.ToString();
+
+            try
+            {
+                var events = await _eventStoreService.GetEventsAsync(id);
+
+                return Ok(ApiResponse<List<ProductEvent>>.Success(
+                    events,
+                    path,
+                    events.Any() ? "Lấy lịch sử sản phẩm thành công" : "Không có lịch sử"
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting events for product {Id}", id);
+                return StatusCode(500, ApiResponse<List<ProductEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
             }
         }
     }

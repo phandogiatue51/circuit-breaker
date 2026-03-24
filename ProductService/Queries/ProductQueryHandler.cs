@@ -1,4 +1,5 @@
 ﻿using DTOs;
+using ProductService.Mappers;
 
 namespace ProductService.Queries
 {

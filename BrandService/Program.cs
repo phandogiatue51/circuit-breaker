@@ -1,34 +1,30 @@
-﻿using AuthService.Middleware;
-using BrandService.Models;
-using Clients;
+﻿using BrandService.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using ProductService;
-using ProductService.Commands;
-using ProductService.Queries;
+using BrandService;
+using BrandService.Commands;
+using BrandService.Queries;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<ProductDbContext>(options =>
+builder.Services.AddDbContext<BrandDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<BrandServiceClient>();
-builder.Services.AddScoped<CategoryServiceClient>();
 builder.Services.AddScoped<Repository>();
-builder.Services.AddScoped<ProductCommandHandler>();
+builder.Services.AddScoped<BrandCommandHandler>();
 builder.Services.AddScoped<BrandQueryHandler>();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ProductDbContext>();
+    .AddDbContextCheck<BrandDbContext>();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BrandService", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

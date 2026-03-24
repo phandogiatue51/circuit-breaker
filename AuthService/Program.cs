@@ -25,7 +25,6 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddScoped<Repository>();
-builder.Services.AddScoped<IService, Service>();
 
 builder.Services.AddScoped<AuthCommandHandler>();
 builder.Services.AddScoped<AuthQueryHandler>();

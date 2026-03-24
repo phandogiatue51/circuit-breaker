@@ -1,7 +1,6 @@
 ﻿using AuthService.Commands;
 using DTOs;
 using DTOs.Exceptions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthService.Controllers

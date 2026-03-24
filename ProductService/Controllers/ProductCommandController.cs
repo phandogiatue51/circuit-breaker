@@ -45,7 +45,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating product");
-                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi tạo sản phẩm", path));
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi tạo sản phẩm", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -60,7 +60,7 @@ namespace ProductService.Controllers
 
                 if (product == null)
                 {
-                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Không tìm thấy sản phẩm với ID {id}", path));
+                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Không tìm thấy sản phẩm với ID {id}", path, "NOT_FOUND"));
                 }
 
                 return Ok(ApiResponse<ProductDto>.Success(product, path, "Cập nhật sản phẩm thành công"));
@@ -72,7 +72,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating product {Id}", id);
-                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi cập nhật sản phẩm", path));
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi cập nhật sản phẩm", path, "INTERNAL_ERROR"));
             }
         }
 

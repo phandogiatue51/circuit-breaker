@@ -44,7 +44,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating brand");
-                return StatusCode(500, ApiResponse<BrandDto>.Error(500, "Có lỗi khi tạo thương hiệu", path));
+                return StatusCode(500, ApiResponse<BrandDto>.Error(500, "Có lỗi khi tạo thương hiệu", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -59,7 +59,7 @@ namespace BrandService.Controllers
 
                 if (product == null)
                 {
-                    return NotFound(ApiResponse<BrandDto>.Error(404, $"Không tìm thấy thương hiệu với ID {id}", path));
+                    return NotFound(ApiResponse<BrandDto>.Error(404, $"Không tìm thấy thương hiệu với ID {id}", path, "NOT_FOUND"));
                 }
 
                 return Ok(ApiResponse<BrandDto>.Success(product, path, "Cập nhật thương hiệu thành công"));
@@ -71,7 +71,7 @@ namespace BrandService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating brand {Id}", id);
-                return StatusCode(500, ApiResponse<BrandDto>.Error(500, "Có lỗi khi cập nhật thương hiệu", path));
+                return StatusCode(500, ApiResponse<BrandDto>.Error(500, "Có lỗi khi cập nhật thương hiệu", path, "INTERNAL_ERROR"));
             }
         }
 

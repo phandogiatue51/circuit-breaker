@@ -1,7 +1,5 @@
-﻿using Clients;
-using DTOs;
-using DTOs.Exceptions;
-using ProductService.Mappers;
+﻿using DTOs;
+using BrandService.Mappers;
 
 namespace BrandService.Commands
 {

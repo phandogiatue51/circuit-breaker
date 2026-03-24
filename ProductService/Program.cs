@@ -31,6 +31,8 @@ builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<ProductCommandHandler>();
 builder.Services.AddScoped<ProductQueryHandler>();
 
+builder.Services.AddScoped<EventStoreService>();
+
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ProductDbContext>();

@@ -1,34 +1,29 @@
-﻿using AuthService.Middleware;
-using Clients;
+﻿using CategoryService.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using ProductService;
-using ProductService.Commands;
-using ProductService.Queries;
+using CategoryService;
+using CategoryService.Commands;
+using CategoryService.Queries;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<ProductDbContext>(options =>
+builder.Services.AddDbContext<CategoryDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-builder.Services.AddScoped<BrandServiceClient>();
-builder.Services.AddScoped<CategoryServiceClient>();
 builder.Services.AddScoped<Repository>();
-builder.Services.AddScoped<ProductCommandHandler>();
-builder.Services.AddScoped<ProductQueryHandler>();
+builder.Services.AddScoped<CategoryCommandHandler>();
+builder.Services.AddScoped<CategoryQueryHandler>();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ProductDbContext>();
+    .AddDbContextCheck<CategoryDbContext>();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "CategoryService", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

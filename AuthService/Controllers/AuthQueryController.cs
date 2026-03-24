@@ -39,7 +39,7 @@ namespace AuthService.Controllers
                     return NotFound(ApiResponse<Account>.Error(
                         404,
                         $"Không tìm thấy tài khoản với id: {id}",
-                        path
+                        path, "NOT_FOUND"
                     ));
                 }
 
@@ -59,7 +59,7 @@ namespace AuthService.Controllers
                 return StatusCode(500, ApiResponse<Account>.Error(
                     500,
                     "Có lỗi xảy ra khi lấy thông tin tài khoản",
-                    path
+                    path, "INTERNAL_ERROR"
                 ));
             }
         }
@@ -83,7 +83,7 @@ namespace AuthService.Controllers
                     return NotFound(ApiResponse<Account>.Error(
                         404,
                         $"Không tìm thấy tài khoản với email: {email}",
-                        path
+                        path, "NOT_FOUND"
                     ));
                 }
 
@@ -103,7 +103,7 @@ namespace AuthService.Controllers
                 return StatusCode(500, ApiResponse<Account>.Error(
                     500,
                     "Có lỗi xảy ra khi lấy thông tin tài khoản",
-                    path
+                    path, "INTERNAL_ERROR"
                 ));
             }
         }
@@ -136,7 +136,7 @@ namespace AuthService.Controllers
                 return StatusCode(500, ApiResponse<bool>.Error(
                     500,
                     "Có lỗi xảy ra khi kiểm tra email",
-                    path
+                    path, "INTERNAL_ERROR"
                 ));
             }
         }

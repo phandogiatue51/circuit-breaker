@@ -1,24 +1,28 @@
 ﻿using Clients;
 using DTOs;
 using DTOs.Exceptions;
+using ProductService.Mappers;
 
 namespace ProductService.Commands
 {
     public class ProductCommandHandler
     {
         private readonly Repository _repository;
+        private readonly EventStoreService _eventStore;  
         private readonly BrandServiceClient _brandClient;
         private readonly CategoryServiceClient _categoryClient;
         private readonly ILogger<ProductCommandHandler> _logger;
 
         public ProductCommandHandler(
             Repository repository,
+                    EventStoreService eventStore, 
             BrandServiceClient brandClient,
             CategoryServiceClient categoryClient,
             ILogger<ProductCommandHandler> logger)
         {
             _repository = repository;
             _brandClient = brandClient;
+            _eventStore = eventStore;  
             _categoryClient = categoryClient;
             _logger = logger;
         }
@@ -71,6 +75,16 @@ namespace ProductService.Commands
             }
 
             await _repository.CreateAsync(product);
+
+            await _eventStore.SaveEventAsync(product.Id, "ProductCreated", new
+            {
+                product.Id,
+                product.Name,
+                product.Price,
+                product.BrandId,
+                CategoryIds = command.CategoryIds
+            });
+
             _logger.LogInformation("Product created: {Id} - {Name}", product.Id, product.Name);
 
             return ProductMapper.ToDto(product);
@@ -159,6 +173,16 @@ namespace ProductService.Commands
 
             product.UpdatedAt = DateTime.UtcNow;
             await _repository.UpdateAsync(product);
+
+            await _eventStore.SaveEventAsync(id, "ProductUpdated", new
+            {
+                product.Id,
+                product.Name,
+                product.Price,
+                product.BrandId,
+                UpdatedAt = DateTime.UtcNow
+            });
+
             _logger.LogInformation("Product updated: {Id}", product.Id);
 
             return ProductMapper.ToDto(product);
@@ -175,6 +199,13 @@ namespace ProductService.Commands
             if (!exists) return false;
 
             await _repository.DeleteAsync(command.Id);
+
+            await _eventStore.SaveEventAsync(command.Id, "ProductDeleted", new
+            {
+                ProductId = command.Id,
+                DeletedAt = DateTime.UtcNow
+            });
+
             _logger.LogInformation("Product deleted: {Id}", command.Id);
 
             return true;

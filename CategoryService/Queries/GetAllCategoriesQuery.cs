@@ -1,6 +1,6 @@
-﻿namespace BrandService.Queries
+﻿namespace CategoryService.Queries
 {
-    public class GetAllBrandsQuery
+    public class GetAllCategoriesQuery
     {
         public int? Page { get; set; }
         public int? PageSize { get; set; }

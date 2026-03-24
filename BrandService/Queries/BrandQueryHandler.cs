@@ -1,5 +1,5 @@
 ﻿using DTOs;
-using ProductService.Mappers;
+using BrandService.Mappers;
 
 namespace BrandService.Queries
 {

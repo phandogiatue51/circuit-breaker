@@ -1,7 +1,6 @@
-﻿using BrandService;
-using DTOs;
+﻿using DTOs;
 
-namespace ProductService.Mappers;
+namespace BrandService.Mappers;
 
 public static class BrandMapper
 {
