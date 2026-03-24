@@ -16,6 +16,8 @@ builder.Services.AddDbContext<CategoryDbContext>(options =>
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<CategoryCommandHandler>();
 builder.Services.AddScoped<CategoryQueryHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()
@@ -71,7 +73,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionHandler>();
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

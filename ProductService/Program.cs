@@ -30,6 +30,8 @@ builder.Services.AddScoped<CategoryServiceClient>();
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<ProductCommandHandler>();
 builder.Services.AddScoped<ProductQueryHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<EventStoreService>();
 
@@ -87,7 +89,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionHandler>();
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

@@ -6,7 +6,8 @@
         public string Message { get; set; } = string.Empty;
         public T? Data { get; set; }
 
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        //public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow.AddHours(7);
 
         public string? Path { get; set; }
 
@@ -17,7 +18,6 @@
                 StatusCode = 200,
                 Message = message,
                 Data = data,
-                Timestamp = DateTime.UtcNow,
                 Path = path
             };
         }
@@ -29,7 +29,6 @@
                 StatusCode = statusCode,
                 Message = message,
                 Data = default,
-                Timestamp = DateTime.UtcNow,
                 Path = path
             };
         }
@@ -40,7 +39,7 @@
         public int StatusCode { get; set; }
         public string Message { get; set; } = string.Empty;
 
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow.AddHours(7);
 
         public string? Path { get; set; }
 
@@ -50,7 +49,6 @@
             {
                 StatusCode = 200,
                 Message = message,
-                Timestamp = DateTime.UtcNow,
                 Path = path
             };
         }
@@ -61,7 +59,6 @@
             {
                 StatusCode = statusCode,
                 Message = message,
-                Timestamp = DateTime.UtcNow,
                 Path = path
             };
         }

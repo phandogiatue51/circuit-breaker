@@ -43,9 +43,7 @@ namespace AuthService.Commands
             {
                 Email = command.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(command.Password),
-                Role = command.Role,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = null
             };
 
             await _repository.CreateAsync(account);
@@ -86,7 +84,6 @@ namespace AuthService.Commands
             return new LoginResponseDto
             {
                 Token = token,
-                Role = (DTOs.AccountRole)account.Role,
                 Email = account.Email,
                 AccountId = account.Id
             };

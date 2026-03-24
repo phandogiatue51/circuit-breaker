@@ -17,6 +17,8 @@ builder.Services.AddDbContext<BrandDbContext>(options =>
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<BrandCommandHandler>();
 builder.Services.AddScoped<BrandQueryHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()
@@ -72,7 +74,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionHandler>();
+app.UseExceptionHandler(); 
 
 if (app.Environment.IsDevelopment())
 {
