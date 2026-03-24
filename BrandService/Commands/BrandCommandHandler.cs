@@ -56,7 +56,7 @@ namespace BrandService.Commands
             if (!string.IsNullOrWhiteSpace(command.Description))
                 brand.Description = command.Description;
 
-            brand.UpdatedAt = DateTime.UtcNow;
+            brand.UpdatedAt = DateTime.UtcNow.AddHours(7);
             await _repository.UpdateAsync(brand);
             _logger.LogInformation("Brand updated: {Id}", brand.Id);
 

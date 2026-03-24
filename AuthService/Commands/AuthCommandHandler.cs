@@ -43,7 +43,6 @@ namespace AuthService.Commands
             {
                 Email = command.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(command.Password),
-                CreatedAt = DateTime.UtcNow,
             };
 
             await _repository.CreateAsync(account);

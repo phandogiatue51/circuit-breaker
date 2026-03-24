@@ -34,7 +34,7 @@ namespace ProductService
 
         public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(7);
         public DateTime? UpdatedAt { get; set; }
     }
 }

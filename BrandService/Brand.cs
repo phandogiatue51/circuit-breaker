@@ -16,7 +16,7 @@ namespace BrandService
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(7);
         public DateTime? UpdatedAt { get; set; }
 
         public bool IsActive { get; set; } = true;

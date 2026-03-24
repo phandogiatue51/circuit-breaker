@@ -60,8 +60,6 @@ namespace ProductService.Commands
                 Material = command.Material,
                 BrandId = brand.Id,
                 BrandName = brand.Name,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
                 ProductCategories = new List<ProductCategory>()
             };
 
@@ -171,7 +169,7 @@ namespace ProductService.Commands
                 }
             }
 
-            product.UpdatedAt = DateTime.UtcNow;
+            product.UpdatedAt = DateTime.UtcNow.AddHours(7);
             await _repository.UpdateAsync(product);
 
             await _eventStore.SaveEventAsync(id, "ProductUpdated", new
@@ -180,7 +178,7 @@ namespace ProductService.Commands
                 product.Name,
                 product.Price,
                 product.BrandId,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow.AddHours(7)
             });
 
             _logger.LogInformation("Product updated: {Id}", product.Id);
@@ -203,7 +201,7 @@ namespace ProductService.Commands
             await _eventStore.SaveEventAsync(command.Id, "ProductDeleted", new
             {
                 ProductId = command.Id,
-                DeletedAt = DateTime.UtcNow
+                DeletedAt = DateTime.UtcNow.AddHours(7)
             });
 
             _logger.LogInformation("Product deleted: {Id}", command.Id);

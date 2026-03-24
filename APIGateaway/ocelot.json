@@ -1,140 +1,8 @@
 ﻿{
   "Routes": [
+    // ==================== SWAGGER HANDLING ====================
     {
-      "DownstreamPathTemplate": "/api/brands/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7197
-        }
-      ],
-      "UpstreamPathTemplate": "/brands/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": null,
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "BrandCircuitBreakerHandler"
-      ],
-      "SwaggerKey": "brands"
-    },
-
-    {
-      "DownstreamPathTemplate": "/api/brands/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7197
-        }
-      ],
-      "UpstreamPathTemplate": "/brands/{everything}",
-      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "BrandCircuitBreakerHandler"
-      ],
-      "SwaggerKey": "brands"
-    },
-    {
-      "DownstreamPathTemplate": "/api/categories/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7067
-        }
-      ],
-      "UpstreamPathTemplate": "/categories/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": null,
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "CategoryCircuitBreakerHandler"
-      ],
-      "RateLimitOptions": {
-        "EnableRateLimiting": false,
-        "ClientWhitelist": []
-      },
-      "SwaggerKey": "categories"
-    },
-    {
-      "DownstreamPathTemplate": "/api/categories/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7067
-        }
-      ],
-      "UpstreamPathTemplate": "/categories/{everything}",
-      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "CategoryCircuitBreakerHandler"
-      ],
-      "RateLimitOptions": {
-        "EnableRateLimiting": false,
-        "ClientWhitelist": []
-      },
-      "SwaggerKey": "categories"
-    },
-    {
-      "DownstreamPathTemplate": "/api/products/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7030
-        }
-      ],
-      "UpstreamPathTemplate": "/products/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": null,
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "ProductCircuitBreakerHandler"
-      ],
-      "SwaggerKey": "products"
-    },
-    {
-      "DownstreamPathTemplate": "/api/products/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7030
-        }
-      ],
-      "UpstreamPathTemplate": "/products/{everything}",
-      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "ProductCircuitBreakerHandler"
-      ],
-      "RateLimitOptions": {
-        "EnableRateLimiting": false,
-        "ClientWhitelist": []
-      },
-      "SwaggerKey": "products"
-    },
-    {
-      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -142,14 +10,336 @@
           "Port": 7071
         }
       ],
-      "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST", "PUT", "GET" ],
-      "SwaggerKey": "auth",
-      "RateLimitOptions": {
-        "EnableRateLimiting": false,
-        "ClientWhitelist": []
-      }
+      "UpstreamPathTemplate": "/v1/auth",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 100
     },
+
+    // ==================== BRAND SERVICE ====================
+    // Brand with /api prefix (direct call pattern)
+    {
+      "DownstreamPathTemplate": "/api/queries/brands/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/api/queries/brands/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "BrandCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "brands",
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/brands/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/api/commands/brands/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "BrandCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "brands",
+      "Priority": 10
+    },
+    // Brand without /api prefix (clean URL pattern)
+    {
+      "DownstreamPathTemplate": "/api/queries/brands/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/brands/queries/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "BrandCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "brands",
+      "Priority": 5
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/brands/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/brands/commands/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "BrandCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "brands",
+      "Priority": 5
+    },
+
+    // ==================== CATEGORY SERVICE ====================
+    // Category with /api prefix
+    {
+      "DownstreamPathTemplate": "/api/queries/categories/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7067
+        }
+      ],
+      "UpstreamPathTemplate": "/api/queries/categories/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "CategoryCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "categories",
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/categories/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7067
+        }
+      ],
+      "UpstreamPathTemplate": "/api/commands/categories/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "CategoryCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "categories",
+      "Priority": 10
+    },
+    // Category without /api prefix
+    {
+      "DownstreamPathTemplate": "/api/queries/categories/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7067
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/queries/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "CategoryCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "categories",
+      "Priority": 5
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/categories/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7067
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/commands/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "CategoryCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "categories",
+      "Priority": 5
+    },
+
+    // ==================== PRODUCT SERVICE ====================
+    // Product with /api prefix
+    {
+      "DownstreamPathTemplate": "/api/queries/products/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7030
+        }
+      ],
+      "UpstreamPathTemplate": "/api/queries/products/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "ProductCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "products",
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/products/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7030
+        }
+      ],
+      "UpstreamPathTemplate": "/api/commands/products/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "ProductCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "products",
+      "Priority": 10
+    },
+    // Product without /api prefix
+    {
+      "DownstreamPathTemplate": "/api/queries/products/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7030
+        }
+      ],
+      "UpstreamPathTemplate": "/products/queries/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": null,
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "ProductCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "products",
+      "Priority": 5
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/products/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7030
+        }
+      ],
+      "UpstreamPathTemplate": "/products/commands/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "ProductCircuitBreakerHandler"
+      ],
+      "SwaggerKey": "products",
+      "Priority": 5
+    },
+
+    // ==================== AUTH SERVICE ====================
+    // Auth with /api prefix (this will fix your 404)
+    {
+      "DownstreamPathTemplate": "/api/queries/auth/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7071
+        }
+      ],
+      "UpstreamPathTemplate": "/api/queries/auth/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "auth",
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/auth/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7071
+        }
+      ],
+      "UpstreamPathTemplate": "/api/commands/auth/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT" ],
+      "SwaggerKey": "auth",
+      "Priority": 10
+    },
+    // Auth without /api prefix
+    {
+      "DownstreamPathTemplate": "/api/queries/auth/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7071
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/queries/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "auth",
+      "Priority": 5
+    },
+    {
+      "DownstreamPathTemplate": "/api/commands/auth/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7071
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/commands/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT" ],
+      "SwaggerKey": "auth",
+      "Priority": 5
+    },
+
+    // ==================== INTERNAL ROUTE ====================
     {
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "https",
@@ -171,7 +361,8 @@
         {
           "Name": "Auth Service API",
           "Version": "v1",
-          "Url": "https://localhost:7071/swagger/v1/swagger.json"
+          "Url": "https://localhost:7071/swagger/v1/swagger.json",
+          "ServerOcelot": "https://localhost:7246"
         }
       ]
     },
@@ -181,7 +372,8 @@
         {
           "Name": "Brand Service API",
           "Version": "v1",
-          "Url": "https://localhost:7197/swagger/v1/swagger.json"
+          "Url": "https://localhost:7197/swagger/v1/swagger.json",
+          "ServerOcelot": "https://localhost:7246"
         }
       ]
     },
@@ -191,7 +383,8 @@
         {
           "Name": "Category Service API",
           "Version": "v1",
-          "Url": "https://localhost:7067/swagger/v1/swagger.json"
+          "Url": "https://localhost:7067/swagger/v1/swagger.json",
+          "ServerOcelot": "https://localhost:7246"
         }
       ]
     },
@@ -201,7 +394,8 @@
         {
           "Name": "Product Service API",
           "Version": "v1",
-          "Url": "https://localhost:7030/swagger/v1/swagger.json"
+          "Url": "https://localhost:7030/swagger/v1/swagger.json",
+          "ServerOcelot": "https://localhost:7246"
         }
       ]
     }
@@ -209,8 +403,8 @@
   "GlobalConfiguration": {
     "BaseUrl": "https://localhost:7246",
     "RateLimitOptions": {
-      "DisableRateLimitHeaders": true, 
-      "EnableRateLimiting": false, 
+      "DisableRateLimitHeaders": true,
+      "EnableRateLimiting": false,
       "QuotaExceededMessage": "Quá nhiều request, vui lòng thử lại sau!",
       "HttpStatusCode": 429,
       "ClientIdHeader": "ClientId"

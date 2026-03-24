@@ -56,7 +56,7 @@ namespace CategoryService.Commands
             if (!string.IsNullOrWhiteSpace(command.Description))
                 category.Description = command.Description;
 
-            category.UpdatedAt = DateTime.UtcNow;
+            category.UpdatedAt = DateTime.UtcNow.AddHours(7);
             await _repository.UpdateAsync(category);
             _logger.LogInformation("Category updated: {Id}", category.Id);
 

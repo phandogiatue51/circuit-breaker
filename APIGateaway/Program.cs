@@ -83,8 +83,8 @@ app.UseSwaggerUI(c =>
 app.UseSwaggerForOcelotUI(opt =>
 {
     opt.PathToSwaggerGenerator = "/swagger/docs";
+    opt.DownstreamSwaggerEndPointBasePath = "";
 });
 
 app.UseOcelot().Wait();
-
 app.Run();

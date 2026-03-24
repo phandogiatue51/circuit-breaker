@@ -17,6 +17,6 @@ namespace AuthService
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public AccountRole Role { get; set; } = AccountRole.Customer;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(7);
     }
 }
