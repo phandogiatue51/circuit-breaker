@@ -7,7 +7,6 @@ namespace CategoryService.Controllers
 {
     [ApiController]
     [Route("api/queries/categories")]
-    [Authorize]
     public class CategoryQueryController : ControllerBase
     {
         private readonly CategoryQueryHandler _queryHandler;

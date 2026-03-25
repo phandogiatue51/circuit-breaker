@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Clients\Clients.csproj" />
+    <ProjectReference Include="..\Cloud\Cloud.csproj" />
     <ProjectReference Include="..\DTOs\DTOs.csproj" />
   </ItemGroup>
 

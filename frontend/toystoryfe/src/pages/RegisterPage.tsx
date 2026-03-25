@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import { Lock, UserPlus, AlertCircle, AtSign } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
-  const [formData, setFormData] = useState({ 
-    email: '', 
+  const [formData, setFormData] = useState({
+    email: '',
     password: '',
     confirmPassword: ''
   });
@@ -42,18 +42,13 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-      <motion.div 
+      <motion.div
         className="premium-card"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         style={{ padding: '48px', width: '100%', maxWidth: '450px' }}
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ padding: '12px', background: 'var(--accent-bg)', borderRadius: '16px', color: 'var(--primary)' }}>
-              <UserPlus size={32} />
-            </div>
-          </div>
           <h1>Create Account</h1>
           <p style={{ color: 'var(--text-dim)' }}>Join our toy marketplace today</p>
         </div>
@@ -73,17 +68,17 @@ const RegisterPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Email Address</label>
-             <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
                 <AtSign size={18} />
               </div>
-              <input 
-                type="email" 
-                className="form-input" 
+              <input
+                type="email"
+                className="form-input"
                 style={{ paddingLeft: '48px' }}
                 placeholder="name@example.com"
                 value={formData.email}
-                onChange={e => setFormData({...formData, email: e.target.value})}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
                 required
               />
             </div>
@@ -91,17 +86,17 @@ const RegisterPage: React.FC = () => {
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Password</label>
-             <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
                 <Lock size={18} />
               </div>
-              <input 
-                type="password" 
-                className="form-input" 
+              <input
+                type="password"
+                className="form-input"
                 style={{ paddingLeft: '48px' }}
                 placeholder="••••••••"
                 value={formData.password}
-                onChange={e => setFormData({...formData, password: e.target.value})}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
                 required
               />
             </div>
@@ -109,17 +104,17 @@ const RegisterPage: React.FC = () => {
 
           <div style={{ marginBottom: '32px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Confirm Password</label>
-             <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
                 <Lock size={18} />
               </div>
-              <input 
-                type="password" 
-                className="form-input" 
+              <input
+                type="password"
+                className="form-input"
                 style={{ paddingLeft: '48px' }}
                 placeholder="••••••••"
                 value={formData.confirmPassword}
-                onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
+                onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
               />
             </div>

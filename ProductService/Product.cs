@@ -16,6 +16,7 @@ namespace ProductService
 
         [Required]
         public string Description { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]

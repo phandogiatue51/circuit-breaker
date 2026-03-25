@@ -2,6 +2,7 @@ using BrandService;
 using BrandService.Commands;
 using BrandService.Middleware;
 using BrandService.Queries;
+using Cloud;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -42,6 +43,7 @@ builder.Services.AddScoped<BrandQueryHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<EventStoreService>();
+builder.Services.AddScoped<CloudinaryService>();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()

@@ -1,4 +1,5 @@
 ﻿using DTOs;
+using DTOs.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -29,18 +30,9 @@ namespace AuthService.Commands
         /// <summary>
         /// COMMAND: Xử lý đăng ký tài khoản
         /// </summary>
-        public async Task<Account?> Handle(RegisterCommand command)
+        public async Task<Account> Handle(RegisterCommand command)  // Change return type to Account (not nullable)
         {
-            _logger.LogInformation("Handling RegisterCommand for email: {Email}", command.Email);
-
-            // Kiểm tra email đã tồn tại
-            var exists = await _repository.EmailExistsAsync(command.Email);
-            if (exists)
-            {
-                _logger.LogWarning("Email already exists: {Email}", command.Email);
-                return null; // Command thất bại
-            }
-
+            
             // Tạo account mới
             var account = new Account
             {
@@ -51,12 +43,14 @@ namespace AuthService.Commands
             await _repository.CreateAsync(account);
 
             _logger.LogInformation("Account created successfully: {Email}", command.Email);
+
             await _eventStore.SaveEventAsync(account.Id, "AuthCreated", new
             {
                 account.Id,
                 account.Email,
                 account.PasswordHash
             });
+
             return account;
         }
 

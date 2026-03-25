@@ -23,6 +23,7 @@ public static class ProductMapper
                 CategoryId = pc.CategoryId,
                 CategoryName = pc.CategoryName
             }).ToList(),
+            ImageUrl = product.ImageUrl,
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt
         };

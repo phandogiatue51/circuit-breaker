@@ -1,4 +1,5 @@
 ﻿using Clients;
+using Cloud;
 using DTOs;
 using DTOs.Exceptions;
 using ProductService.Mappers;
@@ -12,12 +13,13 @@ namespace ProductService.Commands
         private readonly BrandServiceClient _brandClient;
         private readonly CategoryServiceClient _categoryClient;
         private readonly ILogger<ProductCommandHandler> _logger;
+        private readonly CloudinaryService _cloudinaryService;
 
         public ProductCommandHandler(
             Repository repository,
                     EventStoreService eventStore, 
             BrandServiceClient brandClient,
-            CategoryServiceClient categoryClient,
+            CategoryServiceClient categoryClient, CloudinaryService cloudinaryService,
             ILogger<ProductCommandHandler> logger)
         {
             _repository = repository;
@@ -25,6 +27,7 @@ namespace ProductService.Commands
             _eventStore = eventStore;  
             _categoryClient = categoryClient;
             _logger = logger;
+            _cloudinaryService = cloudinaryService;
         }
 
         /// <summary>
@@ -50,6 +53,13 @@ namespace ProductService.Commands
                 throw new BadRequestException($"Categories not found: {string.Join(", ", missingIds)}", "CATEGORIES_NOT_FOUND");
             }
 
+            string? imageUrl = null;
+            if (command.Image != null)
+            {
+                imageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                _logger.LogInformation("Logo uploaded: {LogoUrl}", imageUrl);
+            }
+
             // Create product
             var product = new Product
             {
@@ -60,7 +70,8 @@ namespace ProductService.Commands
                 Material = command.Material,
                 BrandId = brand.Id,
                 BrandName = brand.Name,
-                ProductCategories = new List<ProductCategory>()
+                ProductCategories = new List<ProductCategory>(),
+                ImageUrl = imageUrl
             };
 
             foreach (var cat in categories)
@@ -80,7 +91,8 @@ namespace ProductService.Commands
                 product.Name,
                 product.Price,
                 product.BrandId,
-                CategoryIds = command.CategoryIds
+                CategoryIds = command.CategoryIds,
+                product.ImageUrl
             });
 
             _logger.LogInformation("Product created: {Id} - {Name}", product.Id, product.Name);
@@ -167,6 +179,25 @@ namespace ProductService.Commands
                 {
                     product.ProductCategories.Clear();
                 }
+            }
+
+            if (command.Image != null)
+            {
+                if (!string.IsNullOrEmpty(product.ImageUrl))
+                {
+                    var deleted = await _cloudinaryService.DeleteImageAsync(product.ImageUrl);
+                    if (deleted)
+                    {
+                        _logger.LogInformation("Old image deleted: {ImageUrl}", product.ImageUrl);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to delete old image: {ImageUrl}", product.ImageUrl);
+                    }
+                }
+
+                product.ImageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                _logger.LogInformation("Image updated: {ImageUrl}", product.ImageUrl);
             }
 
             product.UpdatedAt = DateTime.UtcNow.AddHours(7);

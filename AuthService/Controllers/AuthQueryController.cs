@@ -8,7 +8,6 @@ namespace AuthService.Controllers
 {
     [ApiController]
     [Route("api/queries/auth")]
-    [Authorize] // Chỉ authenticated user mới được query
     public class AuthQueryController : ControllerBase
     {
         private readonly AuthQueryHandler _queryHandler;

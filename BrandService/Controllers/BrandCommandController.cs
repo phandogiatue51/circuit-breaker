@@ -21,18 +21,31 @@ namespace BrandService.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<BrandDto>>> Create([FromBody] CreateBrandCommand command)
+        public async Task<ActionResult<ApiResponse<BrandDto>>> Create([FromForm] CreateBrandCommand command)
         {
             var path = HttpContext.Request.Path.ToString();
 
             try
             {
-                var product = await _commandHandler.Handle(command);
+                // Validate file type
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
+                if (!allowedTypes.Contains(command.Image.ContentType))
+                {
+                    throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
+                }
+
+                // Validate file size (max 5MB)
+                if (command.Image.Length > 5 * 1024 * 1024)
+                {
+                    throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
+                }
+
+                var brand = await _commandHandler.Handle(command);
 
                 return CreatedAtAction(
                     nameof(Create),
-                    new { id = product.Id },
-                    ApiResponse<BrandDto>.Success(product, path, "Brand created successfully!")
+                    new { id = brand.Id },
+                    ApiResponse<BrandDto>.Success(brand, path, "Brand created successfully!")
                 );
             }
             catch (BadRequestException ex)
@@ -49,20 +62,35 @@ namespace BrandService.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<BrandDto>>> Update(int id, [FromBody] UpdateBrandCommand command)
+        public async Task<ActionResult<ApiResponse<BrandDto>>> Update(int id, [FromForm] UpdateBrandCommand command)
         {
             var path = HttpContext.Request.Path.ToString();
 
             try
             {
-                var product = await _commandHandler.Handle(command, id);
+                // Validate file if uploaded
+                if (command.Image != null)
+                {
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
+                    if (!allowedTypes.Contains(command.Image.ContentType))
+                    {
+                        throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
+                    }
 
-                if (product == null)
+                    if (command.Image.Length > 5 * 1024 * 1024)
+                    {
+                        throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
+                    }
+                }
+
+                var brand = await _commandHandler.Handle(command, id);
+
+                if (brand == null)
                 {
                     return NotFound(ApiResponse<BrandDto>.Error(404, $"Brand with Id {id} not found!", path, "NOT_FOUND"));
                 }
 
-                return Ok(ApiResponse<BrandDto>.Success(product, path, "Brand updated successfully!"));
+                return Ok(ApiResponse<BrandDto>.Success(brand, path, "Brand updated successfully!"));
             }
             catch (BadRequestException ex)
             {

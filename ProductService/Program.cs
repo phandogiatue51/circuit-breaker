@@ -1,5 +1,6 @@
 using AuthService.Middleware;
 using Clients;
+using Cloud;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -56,6 +57,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<EventStoreService>();
+builder.Services.AddScoped<CloudinaryService>();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()

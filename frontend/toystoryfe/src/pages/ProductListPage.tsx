@@ -47,17 +47,16 @@ const ProductListPage: React.FC = () => {
     fetchProducts();
   }, [sortDesc]);
 
-  const filteredProducts = products.filter(p => 
+  const filteredProducts = products.filter(p =>
     (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (p.brandName?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div style={{ padding: '40px 24px' }}>
-      <header style={{ marginBottom: '48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+    <div >
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
         <div>
-          <h1 style={{ margin: 0 }}>Available Toys</h1>
-          <p style={{ color: 'var(--text-dim)' }}>Discover the best toys from top brands</p>
+          <h1>Discover Products</h1>
         </div>
 
         <div style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '600px' }}>
@@ -65,17 +64,17 @@ const ProductListPage: React.FC = () => {
             <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
               <Search size={18} />
             </div>
-            <input 
-              type="text" 
-              className="form-input" 
+            <input
+              type="text"
+              className="form-input"
               style={{ paddingLeft: '48px' }}
               placeholder="Search products or brands..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <button 
-            className="premium-card" 
+          <button
+            className="premium-card"
             onClick={() => setSortDesc(!sortDesc)}
             style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-bg)' }}
           >
@@ -86,7 +85,7 @@ const ProductListPage: React.FC = () => {
 
       {loading ? (
         <div className="dashboard-grid">
-          {[1,2,3,4,5,6].map(i => (
+          {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="premium-card" style={{ height: '400px', background: 'var(--border)', opacity: 0.3 }}></div>
           ))}
         </div>
@@ -100,7 +99,7 @@ const ProductListPage: React.FC = () => {
         <div className="dashboard-grid">
           <AnimatePresence>
             {filteredProducts.map((product, idx) => (
-              <motion.div 
+              <motion.div
                 key={product.id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -119,7 +118,7 @@ const ProductListPage: React.FC = () => {
                     {product.brandName}
                   </div>
                 </div>
-                
+
                 <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                     <h3 style={{ margin: 0, fontSize: '20px' }}>{product.name}</h3>
@@ -128,7 +127,7 @@ const ProductListPage: React.FC = () => {
                     </div>
                   </div>
                   <p style={{ color: 'var(--text-dim)', fontSize: '14px', marginBottom: '20px', flex: 1 }}>{product.description}</p>
-                  
+
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <button className="shimmer-button" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                       <ShoppingCart size={18} /> Buy Now
@@ -143,7 +142,7 @@ const ProductListPage: React.FC = () => {
           </AnimatePresence>
 
           {isAuthenticated && user?.role === 1 && (
-            <motion.div 
+            <motion.div
               className="premium-card"
               style={{ borderStyle: 'dashed', background: 'transparent', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', minHeight: '400px' }}
               whileHover={{ scale: 1.02 }}

@@ -21,6 +21,8 @@
             get; set;
         }
 
+        public string? ImageUrl { get; set; }
+
         public class CategoryInfoDto
         {
             public int CategoryId { get; set; }

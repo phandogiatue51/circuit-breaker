@@ -15,6 +15,7 @@ namespace BrandService
 
         [MaxLength(500)]
         public string? Description { get; set; }
+        public string? ImageUrl { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(7);
         public DateTime? UpdatedAt { get; set; }

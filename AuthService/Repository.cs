@@ -38,7 +38,7 @@ public class Repository
         {
             // Kiểm tra duplicate email
             if (ex.InnerException?.Message.Contains("duplicate") == true)
-                throw new ConflictException("Email đã tồn tại trong hệ thống", "DUPLICATE_EMAIL");
+                throw new ConflictException("Email has already existed", "DUPLICATE_EMAIL");
 
             throw; // Ném lại exception khác
         }

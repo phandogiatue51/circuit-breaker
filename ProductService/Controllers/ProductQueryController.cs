@@ -7,7 +7,6 @@ namespace ProductService.Controllers
 {
     [ApiController]
     [Route("api/queries/products")]
-    [Authorize]
     public class ProductQueryController : ControllerBase
     {
         private readonly ProductQueryHandler _queryHandler;

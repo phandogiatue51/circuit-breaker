@@ -1,5 +1,6 @@
 ﻿using DTOs;
 using BrandService.Mappers;
+using Cloud;
 
 namespace BrandService.Commands
 {
@@ -8,15 +9,17 @@ namespace BrandService.Commands
         private readonly Repository _repository;
         private readonly EventStoreService _eventStore;
         private readonly ILogger<BrandCommandHandler> _logger;
+        private readonly CloudinaryService _cloudinaryService;
 
         public BrandCommandHandler(
             Repository repository,
             EventStoreService eventStore,
-            ILogger<BrandCommandHandler> logger)
+            ILogger<BrandCommandHandler> logger, CloudinaryService cloudinaryService)
         {
             _repository = repository;
             _logger = logger;
             _eventStore = eventStore;  
+            _cloudinaryService = cloudinaryService;
         }
 
         /// <summary>
@@ -26,11 +29,20 @@ namespace BrandService.Commands
         {
             _logger.LogInformation("Handling CreateBrandCommand: {Name}", command.Name);
 
+            // Upload logo to Cloudinary
+            string? imageUrl = null;
+            if (command.Image != null)
+            {
+                imageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                _logger.LogInformation("Logo uploaded: {LogoUrl}", imageUrl);
+            }
+
             // Create brand
             var brand = new Brand
             {
                 Name = command.Name,
-                Description = command.Description
+                Description = command.Description,
+                ImageUrl = imageUrl,
             };
 
             await _repository.CreateAsync(brand);
@@ -40,7 +52,8 @@ namespace BrandService.Commands
             {
                 brand.Id,
                 brand.Name,
-                brand.Description               
+                brand.Description,
+                brand.ImageUrl
             });
 
             return BrandMapper.ToDto(brand);
@@ -66,6 +79,25 @@ namespace BrandService.Commands
             if (!string.IsNullOrWhiteSpace(command.Description))
                 brand.Description = command.Description;
 
+            if (command.Image != null)
+            {
+                if (!string.IsNullOrEmpty(brand.ImageUrl))
+                {
+                    var deleted = await _cloudinaryService.DeleteImageAsync(brand.ImageUrl);
+                    if (deleted)
+                    {
+                        _logger.LogInformation("Old image deleted: {ImageUrl}", brand.ImageUrl);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to delete old image: {ImageUrl}", brand.ImageUrl);
+                    }
+                }
+
+                brand.ImageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                _logger.LogInformation("Image updated: {ImageUrl}", brand.ImageUrl);
+            }
+
             brand.UpdatedAt = DateTime.UtcNow.AddHours(7);
             await _repository.UpdateAsync(brand);
             _logger.LogInformation("Brand updated: {Id}", brand.Id);
@@ -74,7 +106,8 @@ namespace BrandService.Commands
             {
                 brand.Id,
                 brand.Name,
-                brand.Description
+                brand.Description,
+                brand.ImageUrl
             });
 
             return BrandMapper.ToDto(brand);

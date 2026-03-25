@@ -10,7 +10,7 @@ interface Brand {
   description: string;
   country?: string;
   website?: string;
-  logoUrl?: string;
+  imageUrl?: string;
 }
 
 const BrandListPage: React.FC = () => {
@@ -40,16 +40,15 @@ const BrandListPage: React.FC = () => {
     fetchBrands();
   }, [sortDesc]);
 
-  const filteredBrands = brands.filter(b => 
+  const filteredBrands = brands.filter(b =>
     (b.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div style={{ padding: '40px 24px' }}>
-      <header style={{ marginBottom: '48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+    <div>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
         <div>
-          <h1 style={{ margin: 0 }}>Discover Brands</h1>
-          <p style={{ color: 'var(--text-dim)' }}>Leading toy manufacturers from around the world</p>
+          <h1>Discover Brands</h1>
         </div>
 
         <div style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '600px', alignItems: 'center' }}>
@@ -57,17 +56,17 @@ const BrandListPage: React.FC = () => {
             <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
               <Search size={18} />
             </div>
-            <input 
-              type="text" 
-              className="form-input" 
+            <input
+              type="text"
+              className="form-input"
               style={{ paddingLeft: '48px' }}
               placeholder="Search brands..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <button 
-            className="premium-card" 
+          <button
+            className="premium-card"
             onClick={() => setSortDesc(!sortDesc)}
             style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-bg)' }}
           >
@@ -78,7 +77,7 @@ const BrandListPage: React.FC = () => {
 
       {loading ? (
         <div className="dashboard-grid">
-          {[1,2,3,4].map(i => (
+          {[1, 2, 3, 4].map(i => (
             <div key={i} className="premium-card" style={{ height: '300px', background: 'var(--border)', opacity: 0.3 }}></div>
           ))}
         </div>
@@ -92,7 +91,7 @@ const BrandListPage: React.FC = () => {
         <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
           <AnimatePresence>
             {filteredBrands.map((brand, idx) => (
-              <motion.div 
+              <motion.div
                 key={brand.id}
                 layout
                 initial={{ opacity: 0, y: 10 }}
@@ -103,17 +102,17 @@ const BrandListPage: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <div style={{ width: '64px', height: '64px', background: 'var(--accent-bg)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
-                    {brand.logoUrl ? (
-                      <img src={brand.logoUrl} alt={brand.name} style={{ width: '100%', borderRadius: '16px' }} />
+                    {brand.imageUrl ? (
+                      <img src={brand.imageUrl} alt={brand.name} style={{ width: '100%', borderRadius: '16px' }} />
                     ) : (
                       <Building size={32} />
                     )}
                   </div>
                   <div style={{ flex: 1 }}>
-                     <h3 style={{ margin: 0 }}>{brand.name}</h3>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--text-dim)', marginTop: '4px' }}>
-                       <MapPin size={12} /> {brand.country || 'Global'}
-                     </div>
+                    <h3 style={{ margin: 0 }}>{brand.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--text-dim)', marginTop: '4px' }}>
+                      <MapPin size={12} /> {brand.country || 'Global'}
+                    </div>
                   </div>
                 </div>
 
@@ -134,7 +133,7 @@ const BrandListPage: React.FC = () => {
           </AnimatePresence>
 
           {isAuthenticated && user?.role === 1 && (
-            <motion.div 
+            <motion.div
               className="premium-card"
               style={{ borderStyle: 'dashed', background: 'transparent', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', minHeight: '300px' }}
               whileHover={{ scale: 1.02 }}

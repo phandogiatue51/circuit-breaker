@@ -9,5 +9,6 @@
         public string? Material { get; set; }
         public int BrandId { get; set; }
         public List<int> CategoryIds { get; set; } = new List<int>();
+        public IFormFile? Image { get; set; }
     }
 }

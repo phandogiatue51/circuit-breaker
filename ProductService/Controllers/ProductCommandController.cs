@@ -28,6 +28,18 @@ namespace ProductService.Controllers
 
             try
             {
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
+                if (!allowedTypes.Contains(command.Image.ContentType))
+                {
+                    throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
+                }
+
+                // Validate file size (max 5MB)
+                if (command.Image.Length > 5 * 1024 * 1024)
+                {
+                    throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
+                }
+
                 var product = await _commandHandler.Handle(command);
 
                 return CreatedAtAction(
@@ -56,6 +68,20 @@ namespace ProductService.Controllers
 
             try
             {
+                if (command.Image != null)
+                {
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
+                    if (!allowedTypes.Contains(command.Image.ContentType))
+                    {
+                        throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
+                    }
+
+                    if (command.Image.Length > 5 * 1024 * 1024)
+                    {
+                        throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
+                    }
+                }
+
                 var product = await _commandHandler.Handle(command, id);
 
                 if (product == null)

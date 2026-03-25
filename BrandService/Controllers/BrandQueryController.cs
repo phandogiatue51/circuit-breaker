@@ -7,7 +7,6 @@ namespace BrandService.Controllers
 {
     [ApiController]
     [Route("api/queries/brands")]
-    [Authorize]
     public class BrandQueryController : ControllerBase
     {
         private readonly BrandQueryHandler _queryHandler;

@@ -22,12 +22,12 @@ const LoginPage: React.FC = () => {
       // POST https://localhost:7246/api/commands/auth/login
       const response = await api.post('/commands/auth/login', formData);
       const { token, email, accountId } = response.data.data;
-      
+
       // Decode role from token (from the example claim name)
       const decodedPayload = decodeToken(token);
       const roleClaim = decodedPayload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
       const role = roleClaim === 'Admin' ? 1 : 2; // Defaulting to Customer if not Admin
-      
+
       login(token, { id: accountId, email, role });
       navigate('/products');
     } catch (err: any) {
@@ -39,18 +39,13 @@ const LoginPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-      <motion.div 
+      <motion.div
         className="premium-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{ padding: '48px', width: '100%', maxWidth: '400px' }}
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ padding: '12px', background: 'var(--accent-bg)', borderRadius: '16px', color: 'var(--primary)' }}>
-              <LogIn size={32} />
-            </div>
-          </div>
           <h1>Welcome Back</h1>
           <p style={{ color: 'var(--text-dim)' }}>Sign in to continue your adventure</p>
         </div>
@@ -65,16 +60,16 @@ const LoginPage: React.FC = () => {
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Email / Username</label>
             <div style={{ position: 'relative' }}>
-               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
+              <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
                 <Mail size={18} />
               </div>
-              <input 
-                type="text" 
-                className="form-input" 
+              <input
+                type="text"
+                className="form-input"
                 style={{ paddingLeft: '48px' }}
                 placeholder="email@example.com"
                 value={formData.email}
-                onChange={e => setFormData({...formData, email: e.target.value})}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
                 required
               />
             </div>
@@ -82,17 +77,17 @@ const LoginPage: React.FC = () => {
 
           <div style={{ marginBottom: '32px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Password</label>
-             <div style={{ position: 'relative' }}>
-               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
+            <div style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
                 <Lock size={18} />
               </div>
-              <input 
-                type="password" 
-                className="form-input" 
+              <input
+                type="password"
+                className="form-input"
                 style={{ paddingLeft: '48px' }}
                 placeholder="••••••••"
                 value={formData.password}
-                onChange={e => setFormData({...formData, password: e.target.value})}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
                 required
               />
             </div>

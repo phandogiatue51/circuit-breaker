@@ -16,7 +16,7 @@ public class AuthEvent
     [Column("event_type")]
     public string EventType { get; set; } = string.Empty;
 
-    [Column("payload", TypeName = "nvarchar(max)")]
+    [Column("payload", TypeName = "jsonb")]
     public string Payload { get; set; } = string.Empty; // JSON string
 
     [Column("created_at")]
