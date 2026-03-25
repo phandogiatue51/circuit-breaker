@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "Your_password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    networks:
+      - micro-network
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - micro-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+    networks:
+      - micro-network
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: APIGateaway/Dockerfile
+    ports:
+      - "7246:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - jaeger
+    networks:
+      - micro-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: AuthService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=AccountDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - sqlserver
+      - jaeger
+    networks:
+      - micro-network
+
+  brand-service:
+    build:
+      context: .
+      dockerfile: BrandService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=BrandDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - sqlserver
+      - jaeger
+    networks:
+      - micro-network
+
+  category-service:
+    build:
+      context: .
+      dockerfile: CategoryService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=CategoryDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - sqlserver
+      - jaeger
+    networks:
+      - micro-network
+
+  product-service:
+    build:
+      context: .
+      dockerfile: ProductService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ProductDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      - sqlserver
+      - jaeger
+    networks:
+      - micro-network
+
+networks:
+  micro-network:
+    driver: bridge

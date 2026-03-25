@@ -1,4 +1,4 @@
-﻿using Polly;
+using Polly;
 using Polly.CircuitBreaker;
 
 namespace APIGateaway
@@ -28,12 +28,15 @@ namespace APIGateaway
                 return await _policy.ExecuteAsync(async (context) =>
                 {
                     Console.WriteLine($"Executing request inside circuit breaker for {_serviceName}");
-                    var response = await base.SendAsync(request, cancellationToken);
+                    // CẦN PHẢI CLONE REQUEST, nếu không RetryPolicy sẽ văng lỗi "The request message was already sent" trong lần thử thứ 2
+                    var requestClone = await CloneHttpRequestMessageAsync(request);
+                    var response = await base.SendAsync(requestClone, cancellationToken);
+                    
                     Console.WriteLine($"Response status: {(int)response.StatusCode} {response.StatusCode}");
                     return response;
                 }, new Context($"{_serviceName}-{Guid.NewGuid()}"));
             }
-            catch (BrokenCircuitException ex)
+            catch (BrokenCircuitException)
             {
                 Console.WriteLine($"CIRCUIT BREAKER OPEN - Request blocked for {_serviceName}");
                 return new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
@@ -46,6 +49,40 @@ namespace APIGateaway
                 Console.WriteLine($"Exception in circuit breaker: {ex.Message}");
                 throw;
             }
+        }
+
+        private async Task<HttpRequestMessage> CloneHttpRequestMessageAsync(HttpRequestMessage request)
+        {
+            var clone = new HttpRequestMessage(request.Method, request.RequestUri)
+            {
+                Version = request.Version
+            };
+
+            if (request.Content != null)
+            {
+                var ms = new MemoryStream();
+                await request.Content.CopyToAsync(ms);
+                ms.Position = 0;
+                clone.Content = new StreamContent(ms);
+
+                foreach (var header in request.Content.Headers)
+                {
+                    clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+            }
+
+            foreach (var header in request.Headers)
+            {
+                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            // Clone Options for .NET Core 6.0+
+            foreach (var option in request.Options)
+            {
+                clone.Options.Set(new HttpRequestOptionsKey<object>(option.Key), option.Value);
+            }
+
+            return clone;
         }
     }
 

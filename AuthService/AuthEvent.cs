@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AuthService;
@@ -16,7 +16,7 @@ public class AuthEvent
     [Column("event_type")]
     public string EventType { get; set; } = string.Empty;
 
-    [Column("payload", TypeName = "jsonb")]
+    [Column("payload", TypeName = "nvarchar(max)")]
     public string Payload { get; set; } = string.Empty; // JSON string
 
     [Column("created_at")]
