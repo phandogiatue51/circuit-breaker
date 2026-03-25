@@ -53,6 +53,7 @@ builder.Services.AddScoped<Repository>();
 
 builder.Services.AddScoped<AuthCommandHandler>();
 builder.Services.AddScoped<AuthQueryHandler>();
+builder.Services.AddScoped<EventStoreService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

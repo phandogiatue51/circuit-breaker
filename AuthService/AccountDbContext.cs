@@ -8,6 +8,8 @@ namespace AuthService
             : base(options) { }
 
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<AuthEvent> AuthEvents { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

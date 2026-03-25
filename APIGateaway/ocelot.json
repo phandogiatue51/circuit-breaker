@@ -1,6 +1,7 @@
 ﻿{
   "Routes": [
-    // ==================== SWAGGER HANDLING ====================
+    // ==================== SWAGGER UI ROUTES FOR ALL SERVICES ====================
+    // Auth Service Swagger UI
     {
       "DownstreamPathTemplate": "/swagger/v1/swagger.json",
       "DownstreamScheme": "https",
@@ -11,6 +12,48 @@
         }
       ],
       "UpstreamPathTemplate": "/v1/auth",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 100
+    },
+    // Brand Service Swagger UI
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/v1/brands",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 100
+    },
+    // Category Service Swagger UI
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7067
+        }
+      ],
+      "UpstreamPathTemplate": "/v1/categories",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 100
+    },
+    // Product Service Swagger UI
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7030
+        }
+      ],
+      "UpstreamPathTemplate": "/v1/products",
       "UpstreamHttpMethod": [ "GET" ],
       "Priority": 100
     },
@@ -280,7 +323,7 @@
     },
 
     // ==================== AUTH SERVICE ====================
-    // Auth with /api prefix (this will fix your 404)
+    // Auth with /api prefix
     {
       "DownstreamPathTemplate": "/api/queries/auth/{everything}",
       "DownstreamScheme": "https",

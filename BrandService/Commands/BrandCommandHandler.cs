@@ -6,14 +6,17 @@ namespace BrandService.Commands
     public class BrandCommandHandler
     {
         private readonly Repository _repository;
+        private readonly EventStoreService _eventStore;
         private readonly ILogger<BrandCommandHandler> _logger;
 
         public BrandCommandHandler(
             Repository repository,
+            EventStoreService eventStore,
             ILogger<BrandCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;
+            _eventStore = eventStore;  
         }
 
         /// <summary>
@@ -32,6 +35,13 @@ namespace BrandService.Commands
 
             await _repository.CreateAsync(brand);
             _logger.LogInformation("Brand created: {Id} - {Name}", brand.Id, brand.Name);
+
+            await _eventStore.SaveEventAsync(brand.Id, "BrandCreated", new
+            {
+                brand.Id,
+                brand.Name,
+                brand.Description               
+            });
 
             return BrandMapper.ToDto(brand);
         }
@@ -60,6 +70,13 @@ namespace BrandService.Commands
             await _repository.UpdateAsync(brand);
             _logger.LogInformation("Brand updated: {Id}", brand.Id);
 
+            await _eventStore.SaveEventAsync(brand.Id, "BrandUpdated", new
+            {
+                brand.Id,
+                brand.Name,
+                brand.Description
+            });
+
             return BrandMapper.ToDto(brand);
         }
 
@@ -75,6 +92,12 @@ namespace BrandService.Commands
 
             await _repository.DeleteAsync(command.Id);
             _logger.LogInformation("Brand deleted: {Id}", command.Id);
+
+            await _eventStore.SaveEventAsync(command.Id, "BrandDeleted", new
+            {
+                BrandId = command.Id,
+                DeletedAt = DateTime.UtcNow
+            });
 
             return true;
         }

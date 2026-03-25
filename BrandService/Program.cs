@@ -19,6 +19,7 @@ builder.Services.AddScoped<BrandCommandHandler>();
 builder.Services.AddScoped<BrandQueryHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddScoped<EventStoreService>();
 
 // ⭐ HEALTH CHECK
 builder.Services.AddHealthChecks()

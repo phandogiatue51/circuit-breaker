@@ -10,16 +10,19 @@ namespace AuthService.Commands
     public class AuthCommandHandler
     {
         private readonly Repository _repository;
+        private readonly EventStoreService _eventStore;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthCommandHandler> _logger;
 
         public AuthCommandHandler(
             Repository repository,
             IConfiguration configuration,
+            EventStoreService eventStore,
             ILogger<AuthCommandHandler> logger)
         {
             _repository = repository;
             _configuration = configuration;
+            _eventStore = eventStore;
             _logger = logger;
         }
 
@@ -48,7 +51,12 @@ namespace AuthService.Commands
             await _repository.CreateAsync(account);
 
             _logger.LogInformation("Account created successfully: {Email}", command.Email);
-
+            await _eventStore.SaveEventAsync(account.Id, "AuthCreated", new
+            {
+                account.Id,
+                account.Email,
+                account.PasswordHash
+            });
             return account;
         }
 

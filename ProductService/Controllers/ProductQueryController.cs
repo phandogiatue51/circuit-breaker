@@ -14,7 +14,8 @@ namespace ProductService.Controllers
         private readonly EventStoreService _eventStoreService;
         private readonly ILogger<ProductQueryController> _logger;
 
-        public ProductQueryController(ProductQueryHandler queryHandler, ILogger<ProductQueryController> logger, EventStoreService eventStoreService)
+        public ProductQueryController(ProductQueryHandler queryHandler, ILogger<ProductQueryController> logger, 
+            EventStoreService eventStoreService)
         {
             _queryHandler = queryHandler;
             _logger = logger;

@@ -11,12 +11,14 @@ namespace CategoryService.Controllers
     public class CategoryQueryController : ControllerBase
     {
         private readonly CategoryQueryHandler _queryHandler;
+        private readonly EventStoreService _eventStoreService;
         private readonly ILogger<CategoryQueryController> _logger;
 
-        public CategoryQueryController(CategoryQueryHandler queryHandler, ILogger<CategoryQueryController> logger)
+        public CategoryQueryController(CategoryQueryHandler queryHandler, ILogger<CategoryQueryController> logger, EventStoreService eventStoreService)
         {
             _queryHandler = queryHandler;
             _logger = logger;
+            _eventStoreService = eventStoreService;
         }
 
         [HttpGet]
@@ -75,6 +77,29 @@ namespace CategoryService.Controllers
             {
                 _logger.LogError(ex, "Error getting product {Id}", id);
                 return StatusCode(500, ApiResponse<CategoryDto>.Error(500, "Có lỗi khi lấy thông tin phân loại", path, "INTERNAL_ERROR"));
+            }
+        }
+
+        [HttpGet("{id}/events")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<List<CategoryEvent>>>> GetEvents(int id)
+        {
+            var path = HttpContext.Request.Path.ToString();
+
+            try
+            {
+                var events = await _eventStoreService.GetEventsAsync(id);
+
+                return Ok(ApiResponse<List<CategoryEvent>>.Success(
+                    events,
+                    path,
+                    events.Any() ? "Lấy lịch sử thương hiệu thành công" : "Không có lịch sử"
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting events for category {Id}", id);
+                return StatusCode(500, ApiResponse<List<CategoryEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
             }
         }
     }

@@ -8,6 +8,7 @@ namespace BrandService
             : base(options) { }
 
         public DbSet<Brand> Brands { get; set; }
+        public DbSet<BrandEvent> BrandEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

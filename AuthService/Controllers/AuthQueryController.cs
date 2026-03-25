@@ -12,12 +12,14 @@ namespace AuthService.Controllers
     public class AuthQueryController : ControllerBase
     {
         private readonly AuthQueryHandler _queryHandler;
+        private readonly EventStoreService _eventStoreService;
         private readonly ILogger<AuthQueryController> _logger;
 
-        public AuthQueryController(AuthQueryHandler queryHandler, ILogger<AuthQueryController> logger)
+        public AuthQueryController(AuthQueryHandler queryHandler, ILogger<AuthQueryController> logger, EventStoreService eventStoreService)
         {
             _queryHandler = queryHandler;
             _logger = logger;
+            _eventStoreService = eventStoreService;
         }
 
         /// <summary>
@@ -138,6 +140,29 @@ namespace AuthService.Controllers
                     "Có lỗi xảy ra khi kiểm tra email",
                     path, "INTERNAL_ERROR"
                 ));
+            }
+        }
+
+        [HttpGet("{id}/events")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<List<AuthEvent>>>> GetEvents(int id)
+        {
+            var path = HttpContext.Request.Path.ToString();
+
+            try
+            {
+                var events = await _eventStoreService.GetEventsAsync(id);
+
+                return Ok(ApiResponse<List<AuthEvent>>.Success(
+                    events,
+                    path,
+                    events.Any() ? "Lấy lịch sử tài khoản thành công" : "Không có lịch sử"
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting events for auth {Id}", id);
+                return StatusCode(500, ApiResponse<List<AuthEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
             }
         }
     }

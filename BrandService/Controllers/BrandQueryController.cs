@@ -11,12 +11,14 @@ namespace BrandService.Controllers
     public class BrandQueryController : ControllerBase
     {
         private readonly BrandQueryHandler _queryHandler;
+        private readonly EventStoreService _eventStoreService;
         private readonly ILogger<BrandQueryController> _logger;
 
-        public BrandQueryController(BrandQueryHandler queryHandler, ILogger<BrandQueryController> logger)
+        public BrandQueryController(BrandQueryHandler queryHandler, ILogger<BrandQueryController> logger, EventStoreService eventStoreService)
         {
             _queryHandler = queryHandler;
             _logger = logger;
+            _eventStoreService = eventStoreService;
         }
 
         [HttpGet]
@@ -74,6 +76,29 @@ namespace BrandService.Controllers
             {
                 _logger.LogError(ex, "Error getting product {Id}", id);
                 return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi lấy thông tin thương hiệu", path, "INTERNAL_ERROR"));
+            }
+        }
+
+        [HttpGet("{id}/events")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<List<BrandEvent>>>> GetEvents(int id)
+        {
+            var path = HttpContext.Request.Path.ToString();
+
+            try
+            {
+                var events = await _eventStoreService.GetEventsAsync(id);
+
+                return Ok(ApiResponse<List<BrandEvent>>.Success(
+                    events,
+                    path,
+                    events.Any() ? "Lấy lịch sử thương hiệu thành công" : "Không có lịch sử"
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting events for brand {Id}", id);
+                return StatusCode(500, ApiResponse<List<BrandEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
             }
         }
     }

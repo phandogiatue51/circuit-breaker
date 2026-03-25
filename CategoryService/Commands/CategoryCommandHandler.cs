@@ -6,14 +6,17 @@ namespace CategoryService.Commands
     public class CategoryCommandHandler
     {
         private readonly Repository _repository;
+        private readonly EventStoreService _eventStoreService;
         private readonly ILogger<CategoryCommandHandler> _logger;
 
         public CategoryCommandHandler(
             Repository repository,
+            EventStoreService eventStoreService,
             ILogger<CategoryCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;
+            _eventStoreService = eventStoreService;
         }
 
         /// <summary>
@@ -32,6 +35,13 @@ namespace CategoryService.Commands
 
             await _repository.CreateAsync(category);
             _logger.LogInformation("Category created: {Id} - {Name}", category.Id, category.Name);
+
+            await _eventStoreService.SaveEventAsync(category.Id, "CategoryCreated", new
+            {
+                category.Id,
+                category.Name,
+                category.Description
+            });
 
             return CategoryMapper.ToDto(category);
         }
@@ -60,6 +70,13 @@ namespace CategoryService.Commands
             await _repository.UpdateAsync(category);
             _logger.LogInformation("Category updated: {Id}", category.Id);
 
+            await _eventStoreService.SaveEventAsync(category.Id, "CategoryUpdated", new
+            {
+                category.Id,
+                category.Name,
+                category.Description
+            });
+
             return CategoryMapper.ToDto(category);
         }
 
@@ -75,6 +92,12 @@ namespace CategoryService.Commands
 
             await _repository.DeleteAsync(command.Id);
             _logger.LogInformation("Category deleted: {Id}", command.Id);
+
+            await _eventStoreService.SaveEventAsync(command.Id, "CategoryDeleted", new
+            {
+                CategoryId = command.Id,
+                DeletedAt = DateTime.UtcNow
+            });
 
             return true;
         }

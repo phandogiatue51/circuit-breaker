@@ -8,6 +8,8 @@ namespace CategoryService
             : base(options) { }
 
         public DbSet<Category> Categories { get; set; }
+        public DbSet<CategoryEvent> CategoryEvents { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
