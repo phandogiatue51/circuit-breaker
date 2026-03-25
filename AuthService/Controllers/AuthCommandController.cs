@@ -25,19 +25,16 @@ namespace AuthService.Controllers
 
             // Kiểm tra validation cơ bản
             if (string.IsNullOrWhiteSpace(command.Email))
-                throw new BadRequestException("Email không được để trống", "EMPTY_EMAIL");
+                throw new BadRequestException("Email cannot be empty!", "EMPTY_EMAIL");
 
             if (string.IsNullOrWhiteSpace(command.Password))
-                throw new BadRequestException("Mật khẩu không được để trống", "EMPTY_PASSWORD");
-
-            if (command.Password.Length < 6)
-                throw new BadRequestException("Mật khẩu phải có ít nhất 6 ký tự", "WEAK_PASSWORD");
+                throw new BadRequestException("Password cannot be empty!", "EMPTY_PASSWORD");
 
             // Xử lý command - throw exception nếu có lỗi
             var account = await _commandHandler.Handle(command);
 
             if (account == null)
-                throw new ConflictException("Email đã tồn tại", "EMAIL_EXISTS");
+                throw new ConflictException("Email has existed! Choose a different one", "EMAIL_EXISTS");
 
             // Đăng nhập tự động sau khi đăng ký
             var loginCommand = new LoginCommand
@@ -49,7 +46,7 @@ namespace AuthService.Controllers
             var loginResult = await _commandHandler.Handle(loginCommand);
 
             if (loginResult == null)
-                throw new UnauthorizedException("Không thể đăng nhập sau khi đăng ký");
+                throw new UnauthorizedException("Unable to log in after register!");
 
             return CreatedAtAction(
                 nameof(Register),
@@ -57,7 +54,7 @@ namespace AuthService.Controllers
                 ApiResponse<LoginResponseDto>.Success(
                     loginResult,
                     path,
-                    "Đăng ký tài khoản thành công"
+                    "Register successfully!"
                 )
             );
         }
@@ -68,20 +65,20 @@ namespace AuthService.Controllers
             var path = HttpContext.Request.Path.ToString();
 
             if (string.IsNullOrWhiteSpace(command.Email))
-                throw new BadRequestException("Email không được để trống", "EMPTY_EMAIL");
+                throw new BadRequestException("Email cannot be empty!", "EMPTY_EMAIL");
 
             if (string.IsNullOrWhiteSpace(command.Password))
-                throw new BadRequestException("Mật khẩu không được để trống", "EMPTY_PASSWORD");
+                throw new BadRequestException("Password cannot be empty!", "EMPTY_PASSWORD");
 
             var result = await _commandHandler.Handle(command);
 
             if (result == null)
-                throw new UnauthorizedException("Email hoặc mật khẩu không đúng");
+                throw new UnauthorizedException("Wrong email or password!");
 
             return Ok(ApiResponse<LoginResponseDto>.Success(
                 result,
                 path,
-                "Đăng nhập thành công"
+                "Login successfully!"
             ));
         }
     }

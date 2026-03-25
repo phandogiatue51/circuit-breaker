@@ -1,24 +1,39 @@
-using Serilog;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using Prometheus;
+using CategoryService;
+using CategoryService.Commands;
 using CategoryService.Middleware;
+using CategoryService.Queries;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using CategoryService;
-using CategoryService.Commands;
-using CategoryService.Queries;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Prometheus;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using System.Text;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext().CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        theme: AnsiConsoleTheme.Code
+    )
+    .Enrich.FromLogContext()
+    .CreateBootstrapLogger();
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Host.UseSerilog((context, services, configuration) => configuration.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext());
+
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration.WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        theme: AnsiConsoleTheme.Code
+    )
+    .Enrich.FromLogContext()
+);
 
 builder.Services.AddDbContext<CategoryDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<CategoryCommandHandler>();

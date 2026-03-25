@@ -1,8 +1,3 @@
-using Serilog;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using Prometheus;
 using APIGateaway;
 using Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,11 +5,32 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Prometheus;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using System.Text;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext().CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        theme: AnsiConsoleTheme.Code
+    )
+    .Enrich.FromLogContext()
+    .CreateBootstrapLogger();
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Host.UseSerilog((context, services, configuration) => configuration.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext());
+
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration.WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        theme: AnsiConsoleTheme.Code
+    )
+    .Enrich.FromLogContext()
+);
+
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<BrandServiceClient>();

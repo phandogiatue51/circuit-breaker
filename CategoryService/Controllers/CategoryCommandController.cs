@@ -32,7 +32,7 @@ namespace CategoryService.Controllers
                 return CreatedAtAction(
                     nameof(Create),
                     new { id = category.Id },
-                    ApiResponse<CategoryDto>.Success(category, path, "Tạo phân loại thành công")
+                    ApiResponse<CategoryDto>.Success(category, path, "Category created successfully!")
                 );
             }
             catch (BadRequestException ex)
@@ -44,7 +44,7 @@ namespace CategoryService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating category");
-                return StatusCode(500, ApiResponse<CategoryDto>.Error(500, "Có lỗi khi tạo phân loại", path, "NOT_FOUND"));
+                return StatusCode(500, ApiResponse<CategoryDto>.Error(500, "Error when creating category", path, "NOT_FOUND"));
             }
         }
 
@@ -59,10 +59,10 @@ namespace CategoryService.Controllers
 
                 if (category == null)
                 {
-                    return NotFound(ApiResponse<CategoryDto>.Error(404, $"Không tìm thấy phân loại với ID {id}", path, "NOT_FOUND"));
+                    return NotFound(ApiResponse<CategoryDto>.Error(404, $"Category with Id {id} not found", path, "NOT_FOUND"));
                 }
 
-                return Ok(ApiResponse<CategoryDto>.Success(category, path, "Cập nhật phân loại thành công"));
+                return Ok(ApiResponse<CategoryDto>.Success(category, path, "Category updated successfully!"));
             }
             catch (BadRequestException ex)
             {
@@ -71,7 +71,7 @@ namespace CategoryService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating category {Id}", id);
-                return StatusCode(500, ApiResponse<BrandDto>.Error(500, "Có lỗi khi cập nhật phân loại", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<BrandDto>.Error(500, "Error when updating category", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -87,15 +87,15 @@ namespace CategoryService.Controllers
 
                 if (!deleted)
                 {
-                    return NotFound(ApiResponse.Error(404, $"Không tìm thấy phân loại với ID {id}", path));
+                    return NotFound(ApiResponse.Error(404, $"Category with Id {id} not found", path));
                 }
 
-                return Ok(ApiResponse.Success(path, "Xóa phân loại thành công"));
+                return Ok(ApiResponse.Success(path, "Category deleted successfully!"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting category {Id}", id);
-                return StatusCode(500, ApiResponse.Error(500, "Có lỗi khi xóa phân loại", path));
+                return StatusCode(500, ApiResponse.Error(500, "Error when deleting category!", path));
             }
         }
     }

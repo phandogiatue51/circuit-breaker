@@ -44,13 +44,13 @@ namespace BrandService.Controllers
                 var products = await _queryHandler.Handle(query);
 
                 return Ok(ApiResponse<IEnumerable<BrandDto>>.Success(
-                    products, path, "Lấy danh sách thương hiệu thành công"
+                    products, path, "Brand retrieved successfully!"
                 ));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all brands");
-                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy danh sách thương hiệu", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Error when retrieving brand", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -67,15 +67,15 @@ namespace BrandService.Controllers
 
                 if (product == null)
                 {
-                    return NotFound(ApiResponse<BrandDto>.Error(404, $"Không tìm thấy thương hiệu với ID {id}", path, "NOT_FOUND"));
+                    return NotFound(ApiResponse<BrandDto>.Error(404, $"Brand with Id {id} not found", path, "NOT_FOUND"));
                 }
 
-                return Ok(ApiResponse<BrandDto>.Success(product, path, "Lấy thông tin thương hiệu thành công"));
+                return Ok(ApiResponse<BrandDto>.Success(product, path, "Brand retrieved successfully!"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting product {Id}", id);
-                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi lấy thông tin thương hiệu", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Error when retrieving brand", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -92,13 +92,13 @@ namespace BrandService.Controllers
                 return Ok(ApiResponse<List<BrandEvent>>.Success(
                     events,
                     path,
-                    events.Any() ? "Lấy lịch sử thương hiệu thành công" : "Không có lịch sử"
+                    events.Any() ? "Brand history retrieved successfully!" : "Brand history is empty"
                 ));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting events for brand {Id}", id);
-                return StatusCode(500, ApiResponse<List<BrandEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<List<BrandEvent>>.Error(500, "Error when retrieving brand history", path, "INTERNAL_ERROR"));
             }
         }
     }

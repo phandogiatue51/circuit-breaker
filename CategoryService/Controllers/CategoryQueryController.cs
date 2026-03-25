@@ -44,13 +44,13 @@ namespace CategoryService.Controllers
                 var categories = await _queryHandler.Handle(query);
 
                 return Ok(ApiResponse<IEnumerable<CategoryDto>>.Success(
-                    categories, path, "Lấy danh sách phân loại thành công"
+                    categories, path, "Category retrieved successfully!"
                 ));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all categories");
-                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Có lỗi khi lấy danh sách phân loại", path, "INTERNAL_ERROR"
+                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Error when retrieving category", path, "INTERNAL_ERROR"
 ));
             }
         }
@@ -68,15 +68,15 @@ namespace CategoryService.Controllers
 
                 if (category == null)
                 {
-                    return NotFound(ApiResponse<CategoryDto>.Error(404, $"Không tìm thấy phân loại với ID {id}", path, "NOT_FOUND"));
+                    return NotFound(ApiResponse<CategoryDto>.Error(404, $"Category with Id  {id}  not found", path, "NOT_FOUND"));
                 }
 
-                return Ok(ApiResponse<CategoryDto>.Success(category, path, "Lấy thông tin phân loại thành công"));
+                return Ok(ApiResponse<CategoryDto>.Success(category, path, "Category retrieved successfully!"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting product {Id}", id);
-                return StatusCode(500, ApiResponse<CategoryDto>.Error(500, "Có lỗi khi lấy thông tin phân loại", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<CategoryDto>.Error(500, "Error when retrieving category", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -92,7 +92,7 @@ namespace CategoryService.Controllers
                 {
                     return BadRequest(ApiResponse<List<CategoryDto>>.Error(
                         400,
-                        "Danh sách ID không được để trống",
+                        "IDs cannot be empty",
                         path,
                         "INVALID_REQUEST"
                     ));
@@ -104,7 +104,7 @@ namespace CategoryService.Controllers
                 return Ok(ApiResponse<List<CategoryDto>>.Success(
                     categories,
                     path,
-                    $"Lấy thông tin {categories.Count} phân loại thành công"
+                    $"Categories {categories.Count} retrieved successfully!"
                 ));
             }
             catch (Exception ex)
@@ -112,7 +112,7 @@ namespace CategoryService.Controllers
                 _logger.LogError(ex, "Error getting categories by IDs: {Ids}", string.Join(",", ids));
                 return StatusCode(500, ApiResponse<List<CategoryDto>>.Error(
                     500,
-                    "Có lỗi khi lấy thông tin phân loại",
+                    "Error when retrieving Category IDs",
                     path,
                     "INTERNAL_ERROR"
                 ));
@@ -132,13 +132,13 @@ namespace CategoryService.Controllers
                 return Ok(ApiResponse<List<CategoryEvent>>.Success(
                     events,
                     path,
-                    events.Any() ? "Lấy lịch sử thương hiệu thành công" : "Không có lịch sử"
+                    events.Any() ? "Category history retrieved successfully!" : "Category history is empty"
                 ));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting events for category {Id}", id);
-                return StatusCode(500, ApiResponse<List<CategoryEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<List<CategoryEvent>>.Error(500, "Error when retrieving category history", path, "INTERNAL_ERROR"));
             }
         }
     }

@@ -40,7 +40,7 @@ namespace AuthService.Controllers
                 {
                     return NotFound(ApiResponse<Account>.Error(
                         404,
-                        $"Không tìm thấy tài khoản với id: {id}",
+                        $"Account with Id {id} not found!",
                         path, "NOT_FOUND"
                     ));
                 }
@@ -51,7 +51,7 @@ namespace AuthService.Controllers
                 return Ok(ApiResponse<Account>.Success(
                     account,
                     path,
-                    "Lấy thông tin tài khoản thành công"
+                    "Account retrieved successfully!"
                 ));
             }
             catch (Exception ex)
@@ -60,7 +60,7 @@ namespace AuthService.Controllers
 
                 return StatusCode(500, ApiResponse<Account>.Error(
                     500,
-                    "Có lỗi xảy ra khi lấy thông tin tài khoản",
+                    "Error when retrieving account",
                     path, "INTERNAL_ERROR"
                 ));
             }
@@ -84,7 +84,7 @@ namespace AuthService.Controllers
                 {
                     return NotFound(ApiResponse<Account>.Error(
                         404,
-                        $"Không tìm thấy tài khoản với email: {email}",
+                        $"Account with email {email} not found!",
                         path, "NOT_FOUND"
                     ));
                 }
@@ -95,7 +95,7 @@ namespace AuthService.Controllers
                 return Ok(ApiResponse<Account>.Success(
                     account,
                     path,
-                    "Lấy thông tin tài khoản thành công"
+                    "Account retrieved successfully!"
                 ));
             }
             catch (Exception ex)
@@ -104,7 +104,7 @@ namespace AuthService.Controllers
 
                 return StatusCode(500, ApiResponse<Account>.Error(
                     500,
-                    "Có lỗi xảy ra khi lấy thông tin tài khoản",
+                    "Error when retrieving account",
                     path, "INTERNAL_ERROR"
                 ));
             }
@@ -128,7 +128,7 @@ namespace AuthService.Controllers
                 return Ok(ApiResponse<bool>.Success(
                     exists,
                     path,
-                    exists ? "Email đã tồn tại" : "Email có thể sử dụng"
+                    exists ? "Email has existed" : "Email can be used"
                 ));
             }
             catch (Exception ex)
@@ -137,7 +137,7 @@ namespace AuthService.Controllers
 
                 return StatusCode(500, ApiResponse<bool>.Error(
                     500,
-                    "Có lỗi xảy ra khi kiểm tra email",
+                    "Error when checking mail",
                     path, "INTERNAL_ERROR"
                 ));
             }
@@ -156,13 +156,13 @@ namespace AuthService.Controllers
                 return Ok(ApiResponse<List<AuthEvent>>.Success(
                     events,
                     path,
-                    events.Any() ? "Lấy lịch sử tài khoản thành công" : "Không có lịch sử"
+                    events.Any() ? "Account history retrieved successfully!" : "Account history is empty"
                 ));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting events for auth {Id}", id);
-                return StatusCode(500, ApiResponse<List<AuthEvent>>.Error(500, "Có lỗi khi lấy lịch sử", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<List<AuthEvent>>.Error(500, "Error when retrieving account history", path, "INTERNAL_ERROR"));
             }
         }
     }

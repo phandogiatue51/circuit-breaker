@@ -33,7 +33,7 @@ namespace ProductService.Controllers
                 return CreatedAtAction(
                     nameof(Create),
                     new { id = product.Id },
-                    ApiResponse<ProductDto>.Success(product, path, "Tạo sản phẩm thành công")
+                    ApiResponse<ProductDto>.Success(product, path, "Product created successfully!")
                 );
             }
             catch (BadRequestException ex)
@@ -45,7 +45,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating product");
-                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi tạo sản phẩm", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Error creating product", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -60,10 +60,10 @@ namespace ProductService.Controllers
 
                 if (product == null)
                 {
-                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Không tìm thấy sản phẩm với ID {id}", path, "NOT_FOUND"));
+                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Product with Id {id} not found", path, "NOT_FOUND"));
                 }
 
-                return Ok(ApiResponse<ProductDto>.Success(product, path, "Cập nhật sản phẩm thành công"));
+                return Ok(ApiResponse<ProductDto>.Success(product, path, "Product updated successfully"));
             }
             catch (BadRequestException ex)
             {
@@ -72,7 +72,7 @@ namespace ProductService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating product {Id}", id);
-                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Có lỗi khi cập nhật sản phẩm", path, "INTERNAL_ERROR"));
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Error updating product", path, "INTERNAL_ERROR"));
             }
         }
 
@@ -88,15 +88,15 @@ namespace ProductService.Controllers
 
                 if (!deleted)
                 {
-                    return NotFound(ApiResponse.Error(404, $"Không tìm thấy sản phẩm với ID {id}", path));
+                    return NotFound(ApiResponse<ProductDto>.Error(404, $"Product with Id {id} not found", path, "NOT_FOUND"));
                 }
 
-                return Ok(ApiResponse.Success(path, "Xóa sản phẩm thành công"));
+                return Ok(ApiResponse.Success(path, "Product deleted successfully!"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting product {Id}", id);
-                return StatusCode(500, ApiResponse.Error(500, "Có lỗi khi xóa sản phẩm", path));
+                return StatusCode(500, ApiResponse.Error(500, "Error deleting product", path));
             }
         }
     }
