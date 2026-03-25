@@ -1,3 +1,8 @@
+using Serilog;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using Prometheus;
 using AuthService.Middleware;
 using Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,7 +15,9 @@ using ProductService.Commands;
 using ProductService.Queries;
 using System.Text;
 
+Log.Logger = new LoggerConfiguration().WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext().CreateBootstrapLogger();
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((context, services, configuration) => configuration.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext());
 
 builder.Services.AddDbContext<ProductDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -88,6 +95,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.Configure<Microsoft.Extensions.Hosting.HostOptions>(options => { options.ShutdownTimeout = TimeSpan.FromSeconds(15); });
+builder.Services.AddOpenTelemetry().ConfigureResource(res => res.AddService("ProductService")).WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddOtlpExporter()).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation());
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -99,6 +107,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseHttpMetrics();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -108,8 +117,11 @@ app.MapHealthChecks("/ready");
 app.MapHealthChecks("/live");
 
 app.MapControllers();
+app.MapMetrics();
 
 app.Run();
+
+
 
 
 

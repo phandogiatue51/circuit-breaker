@@ -1,3 +1,8 @@
+using Serilog;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using Prometheus;
 using APIGateaway;
 using Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,7 +12,9 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using System.Text;
 
+Log.Logger = new LoggerConfiguration().WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext().CreateBootstrapLogger();
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((context, services, configuration) => configuration.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()).Enrich.FromLogContext());
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<BrandServiceClient>();
@@ -71,6 +78,7 @@ builder.Services.Configure<Microsoft.Extensions.Hosting.HostOptions>(options =>
     options.ShutdownTimeout = TimeSpan.FromSeconds(15);
 });
 
+builder.Services.AddOpenTelemetry().ConfigureResource(res => res.AddService("APIGateaway")).WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddOtlpExporter()).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation());
 var app = builder.Build();
 
 app.UseCors("AllowAll");
@@ -91,5 +99,7 @@ app.UseSwaggerForOcelotUI(opt =>
     opt.DownstreamSwaggerEndPointBasePath = "";
 });
 
+app.MapMetrics();
 app.UseOcelot().Wait();
 app.Run();
+
