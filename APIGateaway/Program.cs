@@ -1,4 +1,4 @@
-﻿using APIGateaway;
+using APIGateaway;
 using Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -64,6 +64,11 @@ builder.Services.AddCors(options =>
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
+});
+
+builder.Services.Configure<Microsoft.Extensions.Hosting.HostOptions>(options =>
+{
+    options.ShutdownTimeout = TimeSpan.FromSeconds(15);
 });
 
 var app = builder.Build();

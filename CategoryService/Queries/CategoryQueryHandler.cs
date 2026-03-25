@@ -1,4 +1,4 @@
-﻿using CategoryService.Mappers;
+using CategoryService.Mappers;
 using DTOs;
 
 namespace CategoryService.Queries
@@ -59,23 +59,8 @@ namespace CategoryService.Queries
         /// </summary>
         public async Task<List<CategoryDto>> Handle(GetCategoriesByIdsQuery query)
         {
-            _logger.LogInformation("Handling GetCategoriesByIdsQuery for {Count} ids: {Ids}",
-                query.Ids?.Count ?? 0,
-                query.Ids != null ? string.Join(",", query.Ids) : "null");
-
-            if (query.Ids == null || !query.Ids.Any())
-            {
-                _logger.LogWarning("GetCategoriesByIdsQuery called with empty or null Ids list");
-                return new List<CategoryDto>();
-            }
-
-            var categories = await _repository.GetByIdsAsync(query.Ids, includeInactive: false);
-            var dtos = categories.Select(CategoryMapper.ToDto).ToList();
-
-            _logger.LogInformation("Retrieved {Count} categories out of {RequestedCount} requested",
-                dtos.Count, query.Ids.Count);
-
-            return dtos;
+            _logger.LogWarning("SIMULATED BUG: Returning null for GetCategoriesByIdsQuery");
+            return null;
         }
 
         private object GetPropertyValue(Category category, string propertyName)
