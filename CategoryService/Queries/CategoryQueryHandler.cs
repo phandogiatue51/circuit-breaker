@@ -1,5 +1,5 @@
-﻿using DTOs;
-using CategoryService.Mappers;
+﻿using CategoryService.Mappers;
+using DTOs;
 
 namespace CategoryService.Queries
 {
@@ -52,6 +52,30 @@ namespace CategoryService.Queries
 
             var category = await _repository.GetByIdAsync(query.Id);
             return category != null ? CategoryMapper.ToDto(category) : null;
+        }
+
+        /// <summary>
+        /// QUERY: Lấy nhiều phân loại theo danh sách ID
+        /// </summary>
+        public async Task<List<CategoryDto>> Handle(GetCategoriesByIdsQuery query)
+        {
+            _logger.LogInformation("Handling GetCategoriesByIdsQuery for {Count} ids: {Ids}",
+                query.Ids?.Count ?? 0,
+                query.Ids != null ? string.Join(",", query.Ids) : "null");
+
+            if (query.Ids == null || !query.Ids.Any())
+            {
+                _logger.LogWarning("GetCategoriesByIdsQuery called with empty or null Ids list");
+                return new List<CategoryDto>();
+            }
+
+            var categories = await _repository.GetByIdsAsync(query.Ids, includeInactive: false);
+            var dtos = categories.Select(CategoryMapper.ToDto).ToList();
+
+            _logger.LogInformation("Retrieved {Count} categories out of {RequestedCount} requested",
+                dtos.Count, query.Ids.Count);
+
+            return dtos;
         }
 
         private object GetPropertyValue(Category category, string propertyName)

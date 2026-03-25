@@ -7,6 +7,7 @@ namespace BrandService;
 public class BrandEvent
 {
     [Key]
+    [Column("id")]
     public int Id { get; set; }
 
     [Column("brand_id")]
@@ -15,7 +16,7 @@ public class BrandEvent
     [Column("event_type")]
     public string EventType { get; set; } = string.Empty;
 
-    [Column("payload")]
+    [Column("payload", TypeName = "jsonb")]
     public string Payload { get; set; } = string.Empty; // JSON string
 
     [Column("created_at")]

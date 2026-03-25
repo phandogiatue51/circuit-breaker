@@ -23,11 +23,16 @@ namespace CategoryService
             return await _context.Categories.FindAsync(id);
         }
 
-        public async Task<IEnumerable<Category>> GetByIdsAsync(List<int> ids)
+        public async Task<List<Category>> GetByIdsAsync(List<int> ids, bool includeInactive = true)
         {
-            return await _context.Categories
-                .Where(c => ids.Contains(c.Id) && c.IsActive)
-                .ToListAsync();
+            var query = _context.Categories.Where(c => ids.Contains(c.Id));
+
+            if (!includeInactive)
+            {
+                query = query.Where(c => c.IsActive);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task CreateAsync(Category category)

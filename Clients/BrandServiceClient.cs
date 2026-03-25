@@ -21,7 +21,7 @@ namespace Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/brands/{id}");
+                var response = await _httpClient.GetAsync($"/api/queries/brands/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {

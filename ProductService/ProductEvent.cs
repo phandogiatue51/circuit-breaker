@@ -7,6 +7,7 @@ namespace ProductService
     public class ProductEvent
     {
         [Key]
+        [Column("id")]
         public int Id { get; set; }
 
         [Column("product_id")]
@@ -15,7 +16,7 @@ namespace ProductService
         [Column("event_type")]
         public string EventType { get; set; } = string.Empty;
 
-        [Column("payload")]
+        [Column("payload", TypeName = "jsonb")]  
         public string Payload { get; set; } = string.Empty; // JSON string
 
         [Column("created_at")]

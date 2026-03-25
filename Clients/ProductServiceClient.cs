@@ -21,7 +21,7 @@ namespace Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/products/{id}");
+                var response = await _httpClient.GetAsync($"/api/queries/products/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -57,25 +57,11 @@ namespace Clients
             }
         }
 
-        public async Task<bool> ExistsAsync(int id)
-        {
-            try
-            {
-                var product = await GetByIdAsync(id);
-                return product != null;
-            }
-            catch (BrokenCircuitException)
-            {
-                _logger.LogWarning("Cannot check existence for product {ProductId} - circuit is open", id);
-                throw;
-            }
-        }
-
         public async Task<List<ProductDto>> GetAllAsync()
         {
             try
             {
-                var response = await _httpClient.GetAsync("/products");
+                var response = await _httpClient.GetAsync("/api/queries/products");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -97,6 +83,20 @@ namespace Clients
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception in GetAllAsync");
+                throw;
+            }
+        }
+
+        public async Task<bool> ExistsAsync(int id)
+        {
+            try
+            {
+                var product = await GetByIdAsync(id);
+                return product != null;
+            }
+            catch (BrokenCircuitException)
+            {
+                _logger.LogWarning("Cannot check existence for product {ProductId} - circuit is open", id);
                 throw;
             }
         }

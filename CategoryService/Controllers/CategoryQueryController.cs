@@ -80,6 +80,45 @@ namespace CategoryService.Controllers
             }
         }
 
+        [HttpGet("by-ids")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<List<CategoryDto>>>> GetByIds([FromQuery] List<int> ids)
+        {
+            var path = HttpContext.Request.Path.ToString();
+
+            try
+            {
+                if (ids == null || !ids.Any())
+                {
+                    return BadRequest(ApiResponse<List<CategoryDto>>.Error(
+                        400,
+                        "Danh sách ID không được để trống",
+                        path,
+                        "INVALID_REQUEST"
+                    ));
+                }
+
+                var query = new GetCategoriesByIdsQuery { Ids = ids };
+                var categories = await _queryHandler.Handle(query);
+
+                return Ok(ApiResponse<List<CategoryDto>>.Success(
+                    categories,
+                    path,
+                    $"Lấy thông tin {categories.Count} phân loại thành công"
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting categories by IDs: {Ids}", string.Join(",", ids));
+                return StatusCode(500, ApiResponse<List<CategoryDto>>.Error(
+                    500,
+                    "Có lỗi khi lấy thông tin phân loại",
+                    path,
+                    "INTERNAL_ERROR"
+                ));
+            }
+        }
+
         [HttpGet("{id}/events")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<List<CategoryEvent>>>> GetEvents(int id)

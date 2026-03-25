@@ -21,7 +21,7 @@ namespace Clients
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/categories/{id}");
+                var response = await _httpClient.GetAsync($"/api/queries/categories/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -61,7 +61,7 @@ namespace Clients
         {
             try
             {
-                var url = $"/categories/by-ids?ids={string.Join("&ids=", ids)}";
+                var url = $"/api/queries/categories/by-ids?ids={string.Join("&ids=", ids)}";
 
                 var response = await _httpClient.GetAsync(url);
 
