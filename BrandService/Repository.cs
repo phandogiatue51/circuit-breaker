@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace BrandService
 {
@@ -13,9 +13,16 @@ namespace BrandService
 
         public async Task<List<Brand>> GetAllAsync()
         {
-            return await _context.Brands
-                .OrderBy(b => b.Id)
-                .ToListAsync();
+            try
+            {
+                return await _context.Brands
+                    .OrderBy(b => b.Id)
+                    .ToListAsync();
+            }
+            catch
+            {
+                return new List<Brand>();
+            }
         }
 
         public async Task<Brand?> GetByIdAsync(int id)

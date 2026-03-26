@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace CategoryService
 {
@@ -13,9 +13,16 @@ namespace CategoryService
 
         public async Task<List<Category>> GetAllAsync()
         {
-            return await _context.Categories
-                .OrderBy(b => b.Name)
-                .ToListAsync();
+            try
+            {
+                return await _context.Categories
+                    .OrderBy(b => b.Name)
+                    .ToListAsync();
+            }
+            catch
+            {
+                return new List<Category>();
+            }
         }
 
         public async Task<Category?> GetByIdAsync(int id)

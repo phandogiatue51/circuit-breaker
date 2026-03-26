@@ -1,4 +1,4 @@
-﻿{
+{
   "Routes": [
     // ==================== SWAGGER UI ROUTES FOR ALL SERVICES ====================
     // Auth Service Swagger UI
@@ -62,11 +62,11 @@
     // Brand with /api prefix (direct call pattern)
     {
       "DownstreamPathTemplate": "/api/queries/brands/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7197
+          "Host": "brand-service",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/queries/brands/{everything}",
@@ -150,11 +150,11 @@
     // Category with /api prefix
     {
       "DownstreamPathTemplate": "/api/queries/categories/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7067
+          "Host": "category-service",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/queries/categories/{everything}",
@@ -238,11 +238,11 @@
     // Product with /api prefix
     {
       "DownstreamPathTemplate": "/api/queries/products/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7030
+          "Host": "product-service",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/queries/products/{everything}",
