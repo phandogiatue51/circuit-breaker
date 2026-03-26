@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Search, Filter, Plus, X } from 'lucide-react';
+import { Package, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { BrandOption, CategoryOption, Product, ProductFormState } from '../types/types';
 import ProductCard from '../components/Product/ProductCard';
 import ProductView from '../components/Product/ProductView';
 import ProductForm from '../components/Product/ProductForm';
+import ProductHeader from '../components/Product/ProductHeader';
 type ModalMode = 'view' | 'create' | 'update';
 
 const emptyFormState: ProductFormState = {
@@ -255,46 +256,14 @@ const ProductListPage: React.FC = () => {
 
   return (
     <div >
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
-        <div>
-          <h1>Discover Products</h1>
-        </div>
-
-
-        <div style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '720px', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }}>
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              className="form-input"
-              style={{ paddingLeft: '48px' }}
-              placeholder="Search products or brands..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
-          {isAdmin && (
-            <button
-              type="button"
-              className="shimmer-button"
-              onClick={() => openModal('create')}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
-            >
-              <Plus size={18} /> Create
-            </button>
-          )}
-          <button
-            type="button"
-            className="premium-card"
-            onClick={() => setSortDesc(!sortDesc)}
-            style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-bg)' }}
-          >
-            <Filter size={18} /> <span>{sortDesc ? 'Descending' : 'Ascending'}</span>
-          </button>
-        </div>
-      </header>
+      <ProductHeader
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        isAdmin={isAdmin}
+        onCreateClick={() => openModal('create')}
+        sortDesc={sortDesc}
+        onSortChange={() => setSortDesc(!sortDesc)}
+      />
 
       {loading ? (
         <div className="dashboard-grid">
