@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Package, Tag, User } from 'lucide-react';
+import { Aperture, LogOut, Package, Tag, User } from 'lucide-react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -21,6 +21,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <span>ToyStory</span>
           </Link>
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+            <Link to="/circuit" style={{ textDecoration: 'none', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Aperture size={18} /> Dashboard
+            </Link>
             <Link to="/products" style={{ textDecoration: 'none', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Package size={18} /> Products
             </Link>

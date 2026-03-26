@@ -12,12 +12,15 @@ namespace APIGateaway
         private readonly IAsyncPolicy<HttpResponseMessage> _policy;
         private readonly string _serviceName;
         private readonly ICacheService _cache;
+        private readonly ILogger<CircuitBreakerHandler> _logger;
 
-        public CircuitBreakerHandler(IAsyncPolicy<HttpResponseMessage> policy, string serviceName, ICacheService cache)
+        public CircuitBreakerHandler(IAsyncPolicy<HttpResponseMessage> policy, string serviceName, 
+            ICacheService cache, ILogger<CircuitBreakerHandler> logger)
         {
             _policy = policy;
             _serviceName = serviceName;
             _cache = cache;
+            _logger = logger;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -44,7 +47,7 @@ namespace APIGateaway
                     if (response.IsSuccessStatusCode)
                     {
                         await _cache.SetCachedResponseAsync(_serviceName, cacheKey, response, TimeSpan.FromMinutes(5));
-                        Console.WriteLine($"✅ CACHE SET: {_serviceName} - {cacheKey}");
+                        _logger.LogDebug("CACHE SET: {ServiceName} - {CacheKey}", _serviceName, cacheKey);
                     }
 
                     return response;
@@ -56,11 +59,11 @@ namespace APIGateaway
 
                 if (cachedResponse != null)
                 {
-                    Console.WriteLine($"💾 CACHE HIT: {_serviceName} - {cacheKey}");
+                    _logger.LogInformation("Cache hit for {ServiceName}: {CacheKey}", _serviceName, cacheKey);
                     return cachedResponse;
                 }
 
-                Console.WriteLine($"❌ CACHE MISS: {_serviceName} - {cacheKey}");
+                _logger.LogWarning("Cache miss for {ServiceName}: {CacheKey}", _serviceName, cacheKey);
 
                 var payload = new
                 {
@@ -96,11 +99,15 @@ namespace APIGateaway
                 var ms = new MemoryStream();
                 await request.Content.CopyToAsync(ms);
                 ms.Position = 0;
+
                 clone.Content = new StreamContent(ms);
 
                 foreach (var header in request.Content.Headers)
                 {
-                    clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                    if (header.Key != "Content-Length")
+                    {
+                        clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                    }
                 }
             }
 
@@ -109,7 +116,6 @@ namespace APIGateaway
                 clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
 
-            // Clone Options for .NET Core 6.0+
             foreach (var option in request.Options)
             {
                 clone.Options.Set(new HttpRequestOptionsKey<object>(option.Key), option.Value);
@@ -121,24 +127,33 @@ namespace APIGateaway
 
     public class BrandCircuitBreakerHandler : CircuitBreakerHandler
     {
-        public BrandCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
-            : base(policyProvider.BrandPolicy, "BRAND-SERVICE", cache) // ← Added cache parameter
+        public BrandCircuitBreakerHandler(
+            CircuitBreakerPolicyProvider policyProvider,
+            ICacheService cache,
+            ILogger<BrandCircuitBreakerHandler> logger)  // ← Add logger
+            : base(policyProvider.BrandPolicy, "BRAND-SERVICE", cache, logger)  // ← Pass logger
         {
         }
     }
 
     public class CategoryCircuitBreakerHandler : CircuitBreakerHandler
     {
-        public CategoryCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
-            : base(policyProvider.CategoryPolicy, "CATEGORY-SERVICE", cache) 
+        public CategoryCircuitBreakerHandler(
+            CircuitBreakerPolicyProvider policyProvider,
+            ICacheService cache,
+            ILogger<CategoryCircuitBreakerHandler> logger)  // ← Add logger
+            : base(policyProvider.CategoryPolicy, "CATEGORY-SERVICE", cache, logger)  // ← Pass logger
         {
         }
     }
 
     public class ProductCircuitBreakerHandler : CircuitBreakerHandler
     {
-        public ProductCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
-            : base(policyProvider.ProductPolicy, "PRODUCT-SERVICE", cache) 
+        public ProductCircuitBreakerHandler(
+            CircuitBreakerPolicyProvider policyProvider,
+            ICacheService cache,
+            ILogger<ProductCircuitBreakerHandler> logger)  // ← Add logger
+            : base(policyProvider.ProductPolicy, "PRODUCT-SERVICE", cache, logger)  // ← Pass logger
         {
         }
     }

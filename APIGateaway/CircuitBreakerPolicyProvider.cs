@@ -16,10 +16,13 @@ namespace APIGateaway
         public IAsyncPolicy<HttpResponseMessage> ProductPolicy { get; }
 
         private readonly ICacheService _cache;
+        private readonly ILogger<CircuitBreakerPolicyProvider> _logger;
 
-        public CircuitBreakerPolicyProvider(ICacheService cache)
+
+        public CircuitBreakerPolicyProvider(ICacheService cache, ILogger<CircuitBreakerPolicyProvider> logger)
         {
             _cache = cache;
+            _logger = logger;
 
             BrandPolicy = CreateSuperPipeline("BRAND-SERVICE",
                 CircuitBreakerRegistry.BrandServiceManualControl,
@@ -41,7 +44,7 @@ namespace APIGateaway
         {
             // 1. Timeout Pipeline
             var timeoutPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
-                .AddTimeout(TimeSpan.FromSeconds(2))
+                .AddTimeout(TimeSpan.FromSeconds(10))
                 .Build();
             var timeoutPolicy = timeoutPipeline.AsAsyncPolicy();
 
@@ -50,7 +53,7 @@ namespace APIGateaway
                 .AddRetry(new RetryStrategyOptions<HttpResponseMessage>
                 {
                     MaxRetryAttempts = 3,
-                    Delay = TimeSpan.FromSeconds(20),
+                    Delay = TimeSpan.FromSeconds(5),
                     BackoffType = DelayBackoffType.Exponential,
                     ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
                         .Handle<HttpRequestException>()
@@ -67,11 +70,14 @@ namespace APIGateaway
                                 _ = _cache.SetCachedResponseAsync(serviceName, cacheKey, args.Outcome.Result, TimeSpan.FromMinutes(5));
                             }
                         }
-                        Console.WriteLine("======================================================");
-                        Console.WriteLine("======================================================");
-                        Console.WriteLine($"RETRY {args.AttemptNumber}: {serviceName} - Waiting {args.RetryDelay.TotalMilliseconds}ms");
-                        Console.WriteLine("======================================================");
-                        Console.WriteLine("======================================================");
+
+                        _logger.LogInformation(
+                            "RETRY {AttemptNumber} for {ServiceName} - Waiting {Delay}ms - Reason: {Reason}",
+                            args.AttemptNumber,
+                            serviceName,
+                            args.RetryDelay.TotalMilliseconds,
+                            args.Outcome.Exception?.Message ?? args.Outcome.Result?.StatusCode.ToString()
+                        );
 
                         return default;
                     }
@@ -94,29 +100,19 @@ namespace APIGateaway
                     .HandleResult(response => (int)response.StatusCode >= 500),
                 OnOpened = args =>
                 {
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine($"CIRCUIT OPENED: {serviceName}");
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine("======================================================");
+                    _logger.LogWarning("CIRCUIT OPENED: {ServiceName} at {Time}", serviceName, DateTime.Now);
                     return default;
                 },
+
                 OnClosed = args =>
                 {
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine($"CIRCUIT CLOSED: {serviceName} - Healthy again");
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine("======================================================");
+                    _logger.LogInformation("CIRCUIT CLOSED: {ServiceName} - Healthy again", serviceName);
                     return default;
                 },
+
                 OnHalfOpened = args =>
                 {
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine($"CIRCUIT HALF-OPEN: {serviceName} - Testing the waters");
-                    Console.WriteLine("======================================================");
-                    Console.WriteLine("======================================================");
+                    _logger.LogInformation("CIRCUIT HALF-OPEN: {ServiceName} - Testing the waters", serviceName);
                     return default;
                 }
             };
@@ -136,12 +132,12 @@ namespace APIGateaway
                         .HandleResult(response => (int)response.StatusCode >= 500),
                     OnFallback = args =>
                     {
-                        Console.WriteLine($"FALLBACK TRIGGERED: {serviceName} - Serving degraded response");
+                        _logger.LogWarning("FALLBACK TRIGGERED: {ServiceName} - Serving degraded response", serviceName);
                         return default;
                     },
                     FallbackAction = async args =>
                     {
-                        Console.WriteLine($"FALLBACK: Using cached data for {serviceName}");
+                        _logger.LogInformation("FALLBACK: Attempting to use cached data for {ServiceName}", serviceName);
 
                         // Access context properly in Polly V8
                         if (args.Context.Properties.TryGetValue(new ResiliencePropertyKey<string>("CacheKey"), out var cacheKey))

@@ -4,53 +4,9 @@ import api from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Search, Filter, ShoppingCart, Star, Plus, Eye, Pencil, X, Upload, Trash2, History } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  origin?: string;
-  material?: string;
-  brandId?: number;
-  brandName: string;
-  categories?: Array<{
-    categoryId: number;
-    categoryName: string;
-  }>;
-  imageUrl?: string;
-}
-
-interface BrandOption {
-  id: number;
-  name: string;
-}
-
-interface CategoryOption {
-  id: number;
-  name: string;
-}
+import type { BrandOption, CategoryOption, Product, ProductEventItem, ProductFormState } from '../types/types';
 
 type ModalMode = 'view' | 'create' | 'update';
-
-interface ProductFormState {
-  name: string;
-  price: string;
-  description: string;
-  origin: string;
-  material: string;
-  brandId: string;
-  categoryIds: number[];
-  image: File | null;
-}
-
-interface ProductEventItem {
-  id: number;
-  productId: number;
-  eventType: string;
-  payload: string;
-  createdAt: string;
-}
 
 const emptyFormState: ProductFormState = {
   name: '',
@@ -189,7 +145,7 @@ const ProductListPage: React.FC = () => {
         material: product.material || '',
         brandId: product.brandId?.toString() || '',
         categoryIds: product.categories?.map((category) => category.categoryId) || [],
-        image: null,
+        image: null
       });
       return;
     }
@@ -260,7 +216,7 @@ const ProductListPage: React.FC = () => {
     });
 
     if (formState.image) {
-      payload.append('Image', formState.image);
+      payload.append('imageFile', formState.image);
     }
 
     return payload;
@@ -275,11 +231,6 @@ const ProductListPage: React.FC = () => {
 
     if (!formState.name.trim() || !formState.description.trim() || !formState.price.trim() || !formState.brandId.trim()) {
       setFormError('Please fill in all required fields before saving.');
-      return;
-    }
-
-    if (modalMode === 'create' && !formState.image) {
-      setFormError('Please choose an image for the new product.');
       return;
     }
 
@@ -396,6 +347,7 @@ const ProductListPage: React.FC = () => {
         <div>
           <h1>Discover Products</h1>
         </div>
+
 
         <div style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '720px', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: 1 }}>
@@ -555,7 +507,7 @@ const ProductListPage: React.FC = () => {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(15, 23, 42, 0.65)',
+              background: 'rgba(255, 255, 255, 0.6)',
               backdropFilter: 'blur(8px)',
               zIndex: 200,
               display: 'flex',
@@ -934,7 +886,6 @@ const ProductListPage: React.FC = () => {
                           onChange={(event) => setFormState((current) => ({ ...current, image: event.target.files?.[0] || null }))}
                           disabled={submitting}
                           style={{ display: 'none' }}
-                          required={modalMode === 'create'}
                         />
                       </label>
 

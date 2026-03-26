@@ -13,7 +13,7 @@ namespace AuthService
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int Id { get; set; } 
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public AccountRole Role { get; set; } = AccountRole.Customer;

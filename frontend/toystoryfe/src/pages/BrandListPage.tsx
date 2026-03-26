@@ -421,7 +421,7 @@ const BrandListPage: React.FC = () => {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(15, 23, 42, 0.65)',
+              background: 'rgba(255, 255, 255, 0.6)',
               backdropFilter: 'blur(8px)',
               zIndex: 200,
               display: 'flex',
