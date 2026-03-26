@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
-import { Lock, UserPlus, AlertCircle, AtSign } from 'lucide-react';
+import { Lock, AlertCircle, AtSign } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({

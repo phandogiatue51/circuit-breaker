@@ -33,7 +33,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 );
 
 builder.Services.AddDbContext<CategoryDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<Repository>();
 builder.Services.AddScoped<CategoryCommandHandler>();

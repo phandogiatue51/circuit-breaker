@@ -22,7 +22,7 @@ namespace ProductService.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<ProductDto>>> Create([FromBody] CreateProductCommand command)
+        public async Task<ActionResult<ApiResponse<ProductDto>>> Create([FromForm] CreateProductCommand command)
         {
             var path = HttpContext.Request.Path.ToString();
 
@@ -62,7 +62,7 @@ namespace ProductService.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<ProductDto>>> Update(int id, [FromBody] UpdateProductCommand command)
+        public async Task<ActionResult<ApiResponse<ProductDto>>> Update(int id, [FromForm] UpdateProductCommand command)
         {
             var path = HttpContext.Request.Path.ToString();
 
