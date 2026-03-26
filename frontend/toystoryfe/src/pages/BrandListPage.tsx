@@ -407,7 +407,7 @@ const BrandListPage: React.FC = () => {
               )}
 
               {modalMode === 'view' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(260px, 0.9fr)', gap: '24px', alignItems: 'start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.7fr) minmax(220px, 0.75fr)', gap: '20px', alignItems: 'start' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
                     <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
                       <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Name</div>
@@ -419,16 +419,16 @@ const BrandListPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {imagePreviewUrl ? (
                         <img
                           src={imagePreviewUrl}
                           alt={selectedBrand?.name || formState.name || 'Brand preview'}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '280px' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '220px' }}
                         />
                       ) : (
-                        <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '20px' }}>
+                          <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '16px' }}>
                           <Building size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
                           <div>No image selected</div>
                         </div>
@@ -438,7 +438,7 @@ const BrandListPage: React.FC = () => {
                 </div>
               ) : (
                 <form onSubmit={handleSubmitBrand}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(260px, 0.9fr)', gap: modalMode === 'update' ? '16px' : '20px', alignItems: 'start', fontSize: '14px', lineHeight: 1.45 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.7fr) minmax(220px, 0.75fr)', gap: modalMode === 'update' ? '14px' : '18px', alignItems: 'start', fontSize: '14px', lineHeight: 1.45 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: modalMode === 'update' ? '12px' : '18px' }}>
                       <div>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Brand Name</label>
@@ -467,17 +467,17 @@ const BrandListPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: modalMode === 'update' ? '10px' : '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: modalMode === 'update' ? '8px' : '10px' }}>
                       <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Brand Image</label>
-                      <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: modalMode === 'update' ? '240px' : '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: modalMode === 'update' ? '200px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {imagePreviewUrl ? (
                           <img
                             src={imagePreviewUrl}
                             alt={selectedBrand?.name || formState.name || 'Brand preview'}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: modalMode === 'update' ? '240px' : '280px' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: modalMode === 'update' ? '200px' : '220px' }}
                           />
                         ) : (
-                          <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '18px' }}>
+                          <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '14px' }}>
                             <Building size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
                             <div>No image selected</div>
                           </div>
