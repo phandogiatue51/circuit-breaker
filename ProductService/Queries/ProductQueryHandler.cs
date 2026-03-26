@@ -1,4 +1,5 @@
-﻿using DTOs;
+﻿using Clients;
+using DTOs;
 using ProductService.Mappers;
 
 namespace ProductService.Queries
@@ -6,11 +7,13 @@ namespace ProductService.Queries
     public class ProductQueryHandler
     {
         private readonly Repository _repository;
+        private readonly CategoryServiceClient _categoryClient;
         private readonly ILogger<ProductQueryHandler> _logger;
 
-        public ProductQueryHandler(Repository repository, ILogger<ProductQueryHandler> logger)
+        public ProductQueryHandler(Repository repository, CategoryServiceClient categoryClient, ILogger<ProductQueryHandler> logger)
         {
             _repository = repository;
+            _categoryClient = categoryClient;
             _logger = logger;
         }
 
@@ -40,7 +43,8 @@ namespace ProductService.Queries
                     .ToList();
             }
 
-            return products.Select(ProductMapper.ToDto);
+            var categoryNames = await LoadCategoryNameMapAsync(products);
+            return products.Select(product => ProductMapper.ToDto(product, categoryNames));
         }
 
         /// <summary>
@@ -51,7 +55,13 @@ namespace ProductService.Queries
             _logger.LogInformation("Handling GetProductQuery for id: {Id}", query.Id);
 
             var product = await _repository.GetByIdAsync(query.Id);
-            return product != null ? ProductMapper.ToDto(product) : null;
+            if (product == null)
+            {
+                return null;
+            }
+
+            var categoryNames = await LoadCategoryNameMapAsync(new[] { product });
+            return ProductMapper.ToDto(product, categoryNames);
         }
 
         /// <summary>
@@ -62,7 +72,8 @@ namespace ProductService.Queries
             _logger.LogInformation("Handling GetProductsByBrandQuery for brand: {BrandId}", query.BrandId);
 
             var products = await _repository.GetByBrandIdAsync(query.BrandId);
-            return products.Select(ProductMapper.ToDto);
+            var categoryNames = await LoadCategoryNameMapAsync(products);
+            return products.Select(product => ProductMapper.ToDto(product, categoryNames));
         }
 
         /// <summary>
@@ -73,7 +84,27 @@ namespace ProductService.Queries
             _logger.LogInformation("Handling GetProductsByCategoryQuery for category: {CategoryId}", query.CategoryId);
 
             var products = await _repository.GetByCategoryIdAsync(query.CategoryId);
-            return products.Select(ProductMapper.ToDto);
+            var categoryNames = await LoadCategoryNameMapAsync(products);
+            return products.Select(product => ProductMapper.ToDto(product, categoryNames));
+        }
+
+        private async Task<IReadOnlyDictionary<int, string>> LoadCategoryNameMapAsync(IEnumerable<Product> products)
+        {
+            var categoryIds = products
+                .SelectMany(product => product.ProductCategories)
+                .Select(category => category.CategoryId)
+                .Distinct()
+                .ToList();
+
+            if (categoryIds.Count == 0)
+            {
+                return new Dictionary<int, string>();
+            }
+
+            var categories = await _categoryClient.GetByIdsAsync(categoryIds);
+            return categories
+                .GroupBy(category => category.Id)
+                .ToDictionary(group => group.Key, group => group.First().Name);
         }
 
         private object GetPropertyValue(Product product, string propertyName)

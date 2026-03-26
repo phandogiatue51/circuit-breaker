@@ -5,7 +5,7 @@ namespace ProductService.Mappers;
 
 public static class ProductMapper
 {
-    public static ProductDto ToDto(Product product)
+    public static ProductDto ToDto(Product product, IReadOnlyDictionary<int, string>? categoryNames = null)
     {
         return new ProductDto
         {
@@ -21,11 +21,21 @@ public static class ProductMapper
             Categories = product.ProductCategories.Select(pc => new CategoryInfoDto
             {
                 CategoryId = pc.CategoryId,
-                CategoryName = pc.CategoryName
+                CategoryName = GetCategoryName(pc.CategoryId, pc.CategoryName, categoryNames)
             }).ToList(),
             ImageUrl = product.ImageUrl,
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt
         };
+    }
+
+    private static string GetCategoryName(int categoryId, string fallbackName, IReadOnlyDictionary<int, string>? categoryNames)
+    {
+        if (categoryNames != null && categoryNames.TryGetValue(categoryId, out var resolvedName) && !string.IsNullOrWhiteSpace(resolvedName))
+        {
+            return resolvedName;
+        }
+
+        return fallbackName;
     }
 }
