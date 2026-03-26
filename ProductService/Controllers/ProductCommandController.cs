@@ -22,25 +22,13 @@ namespace ProductService.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<ProductDto>>> Create([FromBody] CreateProductCommand command)
+        public async Task<ActionResult<ApiResponse<ProductDto>>> Create([FromForm] CreateProductCommand command, IFormFile? imageFile)
         {
             var path = HttpContext.Request.Path.ToString();
 
             try
             {
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
-                if (!allowedTypes.Contains(command.Image.ContentType))
-                {
-                    throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
-                }
-
-                // Validate file size (max 5MB)
-                if (command.Image.Length > 5 * 1024 * 1024)
-                {
-                    throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
-                }
-
-                var product = await _commandHandler.Handle(command);
+                var product = await _commandHandler.Handle(command, imageFile);
 
                 return CreatedAtAction(
                     nameof(Create),
@@ -62,27 +50,13 @@ namespace ProductService.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<ProductDto>>> Update(int id, [FromBody] UpdateProductCommand command)
+        public async Task<ActionResult<ApiResponse<ProductDto>>> Update(int id, [FromForm] UpdateProductCommand command, IFormFile? imageFile)
         {
             var path = HttpContext.Request.Path.ToString();
 
             try
             {
-                if (command.Image != null)
-                {
-                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
-                    if (!allowedTypes.Contains(command.Image.ContentType))
-                    {
-                        throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
-                    }
-
-                    if (command.Image.Length > 5 * 1024 * 1024)
-                    {
-                        throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
-                    }
-                }
-
-                var product = await _commandHandler.Handle(command, id);
+                var product = await _commandHandler.Handle(command, id, imageFile);
 
                 if (product == null)
                 {

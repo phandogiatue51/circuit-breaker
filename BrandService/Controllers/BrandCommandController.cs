@@ -21,26 +21,13 @@ namespace BrandService.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<BrandDto>>> Create([FromForm] CreateBrandCommand command)
+        public async Task<ActionResult<ApiResponse<BrandDto>>> Create([FromForm] CreateBrandCommand command, IFormFile? imageFile)
         {
             var path = HttpContext.Request.Path.ToString();
 
             try
             {
-                // Validate file type
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
-                if (!allowedTypes.Contains(command.Image.ContentType))
-                {
-                    throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
-                }
-
-                // Validate file size (max 5MB)
-                if (command.Image.Length > 5 * 1024 * 1024)
-                {
-                    throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
-                }
-
-                var brand = await _commandHandler.Handle(command);
+                var brand = await _commandHandler.Handle(command, imageFile);
 
                 return CreatedAtAction(
                     nameof(Create),
@@ -62,28 +49,13 @@ namespace BrandService.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<BrandDto>>> Update(int id, [FromForm] UpdateBrandCommand command)
+        public async Task<ActionResult<ApiResponse<BrandDto>>> Update(int id, [FromForm] UpdateBrandCommand command, IFormFile? imageFile)
         {
             var path = HttpContext.Request.Path.ToString();
 
             try
-            {
-                // Validate file if uploaded
-                if (command.Image != null)
-                {
-                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg", "image/webp" };
-                    if (!allowedTypes.Contains(command.Image.ContentType))
-                    {
-                        throw new BadRequestException("Only JPEG, PNG, WEBP images are allowed!", "INVALID_FILE_TYPE");
-                    }
-
-                    if (command.Image.Length > 5 * 1024 * 1024)
-                    {
-                        throw new BadRequestException("Image size must be less than 5MB!", "FILE_TOO_LARGE");
-                    }
-                }
-
-                var brand = await _commandHandler.Handle(command, id);
+            {               
+                var brand = await _commandHandler.Handle(command, id, imageFile);
 
                 if (brand == null)
                 {
