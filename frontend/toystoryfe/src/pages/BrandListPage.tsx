@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Building, Search, Plus, MapPin, Filter, Eye, Pencil, X, Upload } from 'lucide-react';
+import { Tag, Building, Search, Plus, MapPin, Filter, Eye, Pencil, X, Upload, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface Brand {
@@ -180,6 +180,19 @@ const BrandListPage: React.FC = () => {
     }
   };
 
+  const handleDeleteBrand = async (brand: Brand) => {
+    if (!window.confirm(`Delete brand "${brand.name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/commands/brands/${brand.id}`);
+      await fetchBrands();
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Failed to delete brand.'));
+    }
+  };
+
   return (
     <div>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
@@ -244,8 +257,35 @@ const BrandListPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className="premium-card"
-                style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}
+                style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative' }}
               >
+                {isAuthenticated && user?.role === 1 && (
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteBrand(brand)}
+                    aria-label={`Delete ${brand.name}`}
+                    style={{
+                      position: 'absolute',
+                      top: '16px',
+                      right: '16px',
+                      zIndex: 2,
+                      width: '34px',
+                      height: '34px',
+                      borderRadius: '999px',
+                      border: 'none',
+                      background: 'rgba(239, 68, 68, 0.92)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 8px 24px rgba(239, 68, 68, 0.35)',
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <div style={{ width: '64px', height: '64px', background: 'var(--accent-bg)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                     {brand.imageUrl ? (

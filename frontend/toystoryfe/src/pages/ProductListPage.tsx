@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Search, Filter, ShoppingCart, Star, Plus, Eye, Pencil, X, Upload } from 'lucide-react';
+import { Package, Search, Filter, ShoppingCart, Star, Plus, Eye, Pencil, X, Upload, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface Product {
@@ -288,6 +288,19 @@ const ProductListPage: React.FC = () => {
     }
   };
 
+  const handleDeleteProduct = async (product: Product) => {
+    if (!window.confirm(`Delete product "${product.name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/commands/products/${product.id}`);
+      await fetchProducts();
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Failed to delete product.'));
+    }
+  };
+
   const filteredProducts = products.filter(p =>
     (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (p.brandName?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -365,6 +378,35 @@ const ProductListPage: React.FC = () => {
                 style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
               >
                 <div style={{ height: '240px', background: 'var(--accent-bg)', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleDeleteProduct(product);
+                      }}
+                      aria-label={`Delete ${product.name}`}
+                      style={{
+                        position: 'absolute',
+                        top: '16px',
+                        left: '16px',
+                        zIndex: 2,
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '999px',
+                        border: 'none',
+                        background: 'rgba(239, 68, 68, 0.92)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        boxShadow: '0 8px 24px rgba(239, 68, 68, 0.35)',
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
