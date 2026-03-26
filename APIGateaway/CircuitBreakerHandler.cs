@@ -18,7 +18,6 @@ namespace APIGateaway
             _policy = policy;
             _serviceName = serviceName;
             _cache = cache;
-            Console.WriteLine($"CircuitBreakerHandler CREATED for {serviceName} at {DateTime.Now:HH:mm:ss}");
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -125,25 +124,22 @@ namespace APIGateaway
         public BrandCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
             : base(policyProvider.BrandPolicy, "BRAND-SERVICE", cache) // ← Added cache parameter
         {
-            Console.WriteLine("BrandCircuitBreakerHandler CREATED");
         }
     }
 
     public class CategoryCircuitBreakerHandler : CircuitBreakerHandler
     {
         public CategoryCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
-            : base(policyProvider.CategoryPolicy, "CATEGORY-SERVICE", cache) // ← Added cache parameter
+            : base(policyProvider.CategoryPolicy, "CATEGORY-SERVICE", cache) 
         {
-            Console.WriteLine("CategoryCircuitBreakerHandler CREATED");
         }
     }
 
     public class ProductCircuitBreakerHandler : CircuitBreakerHandler
     {
         public ProductCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
-            : base(policyProvider.ProductPolicy, "PRODUCT-SERVICE", cache) // ← Added cache parameter
+            : base(policyProvider.ProductPolicy, "PRODUCT-SERVICE", cache) 
         {
-            Console.WriteLine("ProductCircuitBreakerHandler CREATED");
         }
     }
 }

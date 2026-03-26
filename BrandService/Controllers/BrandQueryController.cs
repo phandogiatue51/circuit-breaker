@@ -78,6 +78,13 @@ namespace BrandService.Controllers
             }
         }
 
+        //[HttpGet("{id}")]
+        //[AllowAnonymous]
+        //public async Task<ActionResult<ApiResponse<BrandDto>>> GetById(int id)
+        //{
+        //    throw new Exception("Forced error for testing");
+        //}
+
         [HttpGet("{id}/events")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<List<BrandEvent>>>> GetEvents(int id)

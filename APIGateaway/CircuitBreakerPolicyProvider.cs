@@ -2,7 +2,10 @@
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
+using Polly.Retry;
+using Polly.Fallback;
 using APIGateaway.Services;
+using System.Net;
 
 namespace APIGateaway
 {
@@ -36,37 +39,47 @@ namespace APIGateaway
             CircuitBreakerManualControl manualControl,
             CircuitBreakerStateProvider stateProvider)
         {
-            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(
-                TimeSpan.FromSeconds(2),
-                TimeoutStrategy.Optimistic,
-                (context, timeSpan, task) =>
-                {
-                    Console.WriteLine($"⏱TIMEOUT: {serviceName} request timed out after {timeSpan.TotalSeconds}s");
-                    return Task.CompletedTask;
-                });
+            // 1. Timeout Pipeline
+            var timeoutPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
+                .AddTimeout(TimeSpan.FromSeconds(2))
+                .Build();
+            var timeoutPolicy = timeoutPipeline.AsAsyncPolicy();
 
-            var retryPolicy = Policy<HttpResponseMessage>
-                .Handle<HttpRequestException>()
-                .Or<TimeoutRejectedException>()
-                .OrResult(r => !r.IsSuccessStatusCode)
-                .WaitAndRetryAsync(
-                    3,
-                    retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt))
-                                   + TimeSpan.FromMilliseconds(Random.Shared.Next(0, 50)),
-                    onRetry: async (outcome, timespan, retryCount, context) =>
+            // 2. Retry Pipeline - Polly V8
+            var retryPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
+                .AddRetry(new RetryStrategyOptions<HttpResponseMessage>
+                {
+                    MaxRetryAttempts = 3,
+                    Delay = TimeSpan.FromSeconds(20),
+                    BackoffType = DelayBackoffType.Exponential,
+                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                        .Handle<HttpRequestException>()
+                        .Handle<TimeoutRejectedException>()
+                        .HandleResult(response => (int)response.StatusCode >= 500),
+                    OnRetry = args =>
                     {
-                        // Cache successful responses with the cache key from context
-                        if (outcome.Result?.IsSuccessStatusCode == true && context.ContainsKey("CacheKey"))
+                        // Access context properly in Polly V8
+                        if (args.Context.Properties.TryGetValue(new ResiliencePropertyKey<string>("CacheKey"), out var cacheKey))
                         {
-                            var cacheKey = context["CacheKey"] as string;
-                            if (!string.IsNullOrEmpty(cacheKey))
+                            if (!string.IsNullOrEmpty(cacheKey) && args.Outcome.Result?.IsSuccessStatusCode == true)
                             {
-                                await _cache.SetCachedResponseAsync(serviceName, cacheKey, outcome.Result, TimeSpan.FromMinutes(5));
+                                // Fire and forget caching (or await properly if needed)
+                                _ = _cache.SetCachedResponseAsync(serviceName, cacheKey, args.Outcome.Result, TimeSpan.FromMinutes(5));
                             }
                         }
-                        Console.WriteLine($"RETRY {retryCount}: {serviceName} - Waiting {timespan.TotalMilliseconds}ms");
-                    });
+                        Console.WriteLine("======================================================");
+                        Console.WriteLine("======================================================");
+                        Console.WriteLine($"RETRY {args.AttemptNumber}: {serviceName} - Waiting {args.RetryDelay.TotalMilliseconds}ms");
+                        Console.WriteLine("======================================================");
+                        Console.WriteLine("======================================================");
 
+                        return default;
+                    }
+                })
+                .Build();
+            var retryPolicy = retryPipeline.AsAsyncPolicy();
+
+            // 3. Circuit Breaker Pipeline - Polly V8
             var circuitBreakerOptions = new CircuitBreakerStrategyOptions<HttpResponseMessage>
             {
                 FailureRatio = 0.5,
@@ -78,54 +91,61 @@ namespace APIGateaway
                 ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
                     .Handle<HttpRequestException>()
                     .Handle<TimeoutRejectedException>()
-                    .HandleResult(response => !response.IsSuccessStatusCode),
-
-                OnOpened = (args) =>
+                    .HandleResult(response => (int)response.StatusCode >= 500),
+                OnOpened = args =>
                 {
                     Console.WriteLine("======================================================");
                     Console.WriteLine("======================================================");
-                    Console.WriteLine($"CIRCUIT OPENED: {serviceName} - Blocking for {args.BreakDuration.TotalSeconds:F0} seconds");
+                    Console.WriteLine($"CIRCUIT OPENED: {serviceName}");
                     Console.WriteLine("======================================================");
                     Console.WriteLine("======================================================");
-                    return ValueTask.CompletedTask;
+                    return default;
                 },
-                OnClosed = (args) =>
+                OnClosed = args =>
                 {
                     Console.WriteLine("======================================================");
                     Console.WriteLine("======================================================");
                     Console.WriteLine($"CIRCUIT CLOSED: {serviceName} - Healthy again");
                     Console.WriteLine("======================================================");
                     Console.WriteLine("======================================================");
-                    return ValueTask.CompletedTask;
+                    return default;
                 },
-                OnHalfOpened = (args) =>
+                OnHalfOpened = args =>
                 {
                     Console.WriteLine("======================================================");
                     Console.WriteLine("======================================================");
                     Console.WriteLine($"CIRCUIT HALF-OPEN: {serviceName} - Testing the waters");
                     Console.WriteLine("======================================================");
                     Console.WriteLine("======================================================");
-                    return ValueTask.CompletedTask;
+                    return default;
                 }
             };
 
-            var circuitBreaker = new ResiliencePipelineBuilder<HttpResponseMessage>()
+            var circuitBreakerPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
                 .AddCircuitBreaker(circuitBreakerOptions)
-                .Build()
-                .AsAsyncPolicy();
+                .Build();
+            var circuitBreakerPolicy = circuitBreakerPipeline.AsAsyncPolicy();
 
-            var fallbackPolicy = Policy<HttpResponseMessage>
-                .Handle<Exception>()
-                .OrResult(r => !r.IsSuccessStatusCode)
-                .FallbackAsync(
-                    fallbackAction: async (context, token) =>
+            // 4. Fallback Pipeline - Polly V8
+            var fallbackPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
+                .AddFallback(new FallbackStrategyOptions<HttpResponseMessage>
+                {
+                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                        .Handle<HttpRequestException>()
+                        .Handle<TimeoutRejectedException>()
+                        .HandleResult(response => (int)response.StatusCode >= 500),
+                    OnFallback = args =>
+                    {
+                        Console.WriteLine($"FALLBACK TRIGGERED: {serviceName} - Serving degraded response");
+                        return default;
+                    },
+                    FallbackAction = async args =>
                     {
                         Console.WriteLine($"FALLBACK: Using cached data for {serviceName}");
 
-                        // Try to get from real cache using the cache key from context
-                        if (context.ContainsKey("CacheKey"))
+                        // Access context properly in Polly V8
+                        if (args.Context.Properties.TryGetValue(new ResiliencePropertyKey<string>("CacheKey"), out var cacheKey))
                         {
-                            var cacheKey = context["CacheKey"] as string;
                             if (!string.IsNullOrEmpty(cacheKey))
                             {
                                 var cached = await _cache.GetCachedResponseAsync(serviceName, cacheKey);
@@ -136,13 +156,13 @@ namespace APIGateaway
                                         Content = await CloneContentAsync(cached.Content),
                                         ReasonPhrase = cached.ReasonPhrase
                                     };
-                                    return clone;
+                                    return Outcome.FromResult(clone);
                                 }
                             }
                         }
 
                         // If no cache, return degraded response
-                        return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                        var degradedResponse = new HttpResponseMessage(HttpStatusCode.OK)
                         {
                             Content = new StringContent($@"{{
                                 ""service"": ""{serviceName}"",
@@ -151,14 +171,15 @@ namespace APIGateaway
                                 ""timestamp"": ""{DateTime.Now:O}""
                             }}")
                         };
-                    },
-                    onFallbackAsync: async (outcome, context) =>
-                    {
-                        Console.WriteLine($"FALLBACK TRIGGERED: {serviceName} - Serving degraded response");
-                    });
+                        return Outcome.FromResult(degradedResponse);
+                    }
+                })
+                .Build();
+            var fallbackPolicy = fallbackPipeline.AsAsyncPolicy();
 
+            // Combine policies
             return fallbackPolicy
-                .WrapAsync(circuitBreaker)
+                .WrapAsync(circuitBreakerPolicy)
                 .WrapAsync(retryPolicy)
                 .WrapAsync(timeoutPolicy);
         }
