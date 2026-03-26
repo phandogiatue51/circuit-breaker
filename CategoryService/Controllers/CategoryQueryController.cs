@@ -49,7 +49,7 @@ namespace CategoryService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all categories");
-                return StatusCode(500, ApiResponse<IEnumerable<ProductDto>>.Error(500, "Error when retrieving category", path, "INTERNAL_ERROR"
+                return StatusCode(500, ApiResponse<IEnumerable<CategoryDto>>.Error(500, "Error when retrieving category", path, "INTERNAL_ERROR"
 ));
             }
         }

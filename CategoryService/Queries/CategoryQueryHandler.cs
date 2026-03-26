@@ -59,8 +59,21 @@ namespace CategoryService.Queries
         /// </summary>
         public async Task<List<CategoryDto>> Handle(GetCategoriesByIdsQuery query)
         {
-            _logger.LogWarning("SIMULATED BUG: Returning null for GetCategoriesByIdsQuery");
-            return null;
+            _logger.LogInformation("Handling GetCategoriesByIdsQuery for ids: {Ids}", string.Join(",", query.Ids));
+
+            if (query.Ids == null || !query.Ids.Any())
+            {
+                return new List<CategoryDto>();
+            }
+
+            var categories = await _repository.GetByIdsAsync(query.Ids);
+
+            if (categories == null || !categories.Any())
+            {
+                return new List<CategoryDto>();
+            }
+
+            return categories.Select(CategoryMapper.ToDto).ToList();
         }
 
         private object GetPropertyValue(Category category, string propertyName)

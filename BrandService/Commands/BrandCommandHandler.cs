@@ -25,15 +25,15 @@ namespace BrandService.Commands
         /// <summary>
         /// COMMAND: Tạo thương hiệu mới
         /// </summary>
-        public async Task<BrandDto> Handle(CreateBrandCommand command)
+        public async Task<BrandDto> Handle(CreateBrandCommand command, IFormFile? imageFile)
         {
             _logger.LogInformation("Handling CreateBrandCommand: {Name}", command.Name);
 
             // Upload logo to Cloudinary
             string? imageUrl = null;
-            if (command.Image != null)
+            if (imageFile != null)
             {
-                imageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                imageUrl = await _cloudinaryService.UploadImageAsync(imageFile);
                 _logger.LogInformation("Logo uploaded: {LogoUrl}", imageUrl);
             }
 
@@ -62,7 +62,7 @@ namespace BrandService.Commands
         /// <summary>
         /// COMMAND: Cập nhật thương hiệu
         /// </summary>
-        public async Task<BrandDto?> Handle(UpdateBrandCommand command, int id)
+        public async Task<BrandDto?> Handle(UpdateBrandCommand command, int id, IFormFile? imageFile)
         {
             _logger.LogInformation("Handling UpdateBrandCommand for id: {Id}", id);
 
@@ -79,7 +79,7 @@ namespace BrandService.Commands
             if (!string.IsNullOrWhiteSpace(command.Description))
                 brand.Description = command.Description;
 
-            if (command.Image != null)
+            if (imageFile != null)
             {
                 if (!string.IsNullOrEmpty(brand.ImageUrl))
                 {
@@ -94,7 +94,7 @@ namespace BrandService.Commands
                     }
                 }
 
-                brand.ImageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                brand.ImageUrl = await _cloudinaryService.UploadImageAsync(imageFile);
                 _logger.LogInformation("Image updated: {ImageUrl}", brand.ImageUrl);
             }
 

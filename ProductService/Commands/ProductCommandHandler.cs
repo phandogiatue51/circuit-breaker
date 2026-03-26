@@ -33,7 +33,7 @@ namespace ProductService.Commands
         /// <summary>
         /// COMMAND: Tạo sản phẩm mới
         /// </summary>
-        public async Task<ProductDto> Handle(CreateProductCommand command)
+        public async Task<ProductDto> Handle(CreateProductCommand command, IFormFile? imageFile)
         {
             _logger.LogInformation("Handling CreateProductCommand: {Name}", command.Name);
 
@@ -54,9 +54,9 @@ namespace ProductService.Commands
             }
 
             string? imageUrl = null;
-            if (command.Image != null)
+            if (imageFile != null)
             {
-                imageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                imageUrl = await _cloudinaryService.UploadImageAsync(imageFile);
                 _logger.LogInformation("Logo uploaded: {LogoUrl}", imageUrl);
             }
 
@@ -103,7 +103,7 @@ namespace ProductService.Commands
         /// <summary>
         /// COMMAND: Cập nhật sản phẩm
         /// </summary>
-        public async Task<ProductDto?> Handle(UpdateProductCommand command, int id)
+        public async Task<ProductDto?> Handle(UpdateProductCommand command, int id, IFormFile? imageFile)
         {
             _logger.LogInformation("Handling UpdateProductCommand for id: {Id}", id);
 
@@ -181,7 +181,7 @@ namespace ProductService.Commands
                 }
             }
 
-            if (command.Image != null)
+            if (imageFile != null)
             {
                 if (!string.IsNullOrEmpty(product.ImageUrl))
                 {
@@ -196,7 +196,7 @@ namespace ProductService.Commands
                     }
                 }
 
-                product.ImageUrl = await _cloudinaryService.UploadImageAsync(command.Image);
+                product.ImageUrl = await _cloudinaryService.UploadImageAsync(imageFile);
                 _logger.LogInformation("Image updated: {ImageUrl}", product.ImageUrl);
             }
 

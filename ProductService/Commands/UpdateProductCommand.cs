@@ -10,7 +10,5 @@
         public bool? IsActive { get; set; }
         public int? BrandId { get; set; }
         public List<int>? CategoryIds { get; set; }
-        public IFormFile? Image { get; set; }
-
     }
 }
