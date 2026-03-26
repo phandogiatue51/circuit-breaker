@@ -97,7 +97,7 @@ namespace ProductService.Commands
 
             _logger.LogInformation("Product created: {Id} - {Name}", product.Id, product.Name);
 
-            return ProductMapper.ToDto(product);
+            return ProductMapper.ToDto(product, BuildCategoryNameMap(categories));
         }
 
         /// <summary>
@@ -214,7 +214,12 @@ namespace ProductService.Commands
 
             _logger.LogInformation("Product updated: {Id}", product.Id);
 
-            return ProductMapper.ToDto(product);
+            var currentCategoryIds = product.ProductCategories.Select(category => category.CategoryId).Distinct().ToList();
+            var refreshedCategories = currentCategoryIds.Count > 0
+                ? await _categoryClient.GetByIdsAsync(currentCategoryIds)
+                : new List<DTOs.CategoryDto>();
+
+            return ProductMapper.ToDto(product, BuildCategoryNameMap(refreshedCategories));
         }
 
         /// <summary>
@@ -238,6 +243,13 @@ namespace ProductService.Commands
             _logger.LogInformation("Product deleted: {Id}", command.Id);
 
             return true;
+        }
+
+        private static IReadOnlyDictionary<int, string> BuildCategoryNameMap(IEnumerable<CategoryDto> categories)
+        {
+            return categories
+                .GroupBy(category => category.Id)
+                .ToDictionary(group => group.Key, group => group.First().Name);
         }
     }
 }

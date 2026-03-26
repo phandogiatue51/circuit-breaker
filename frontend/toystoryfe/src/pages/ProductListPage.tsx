@@ -10,9 +10,25 @@ interface Product {
   name: string;
   price: number;
   description: string;
-  categoryName: string;
+  origin?: string;
+  material?: string;
+  brandId?: number;
   brandName: string;
+  categories?: Array<{
+    categoryId: number;
+    categoryName: string;
+  }>;
   imageUrl?: string;
+}
+
+interface BrandOption {
+  id: number;
+  name: string;
+}
+
+interface CategoryOption {
+  id: number;
+  name: string;
 }
 
 type ModalMode = 'view' | 'create' | 'update';
@@ -21,8 +37,10 @@ interface ProductFormState {
   name: string;
   price: string;
   description: string;
-  brandName: string;
-  categoryName: string;
+  origin: string;
+  material: string;
+  brandId: string;
+  categoryIds: number[];
   image: File | null;
 }
 
@@ -30,8 +48,10 @@ const emptyFormState: ProductFormState = {
   name: '',
   price: '',
   description: '',
-  brandName: '',
-  categoryName: '',
+  origin: '',
+  material: '',
+  brandId: '',
+  categoryIds: [],
   image: null,
 };
 
@@ -41,6 +61,9 @@ const ProductListPage: React.FC = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortDesc, setSortDesc] = useState(false);
+  const [brandOptions, setBrandOptions] = useState<BrandOption[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [formState, setFormState] = useState<ProductFormState>(emptyFormState);
@@ -48,6 +71,7 @@ const ProductListPage: React.FC = () => {
   const [formSuccess, setFormSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const { isAuthenticated, user } = useAuth();
 
   const isAdmin = isAuthenticated && user?.role === 1;
@@ -77,6 +101,36 @@ const ProductListPage: React.FC = () => {
   }, [sortDesc]);
 
   useEffect(() => {
+    const fetchLookups = async () => {
+      try {
+        setLookupLoading(true);
+
+        const [brandsResponse, categoriesResponse] = await Promise.all([
+          api.get('/queries/brands'),
+          api.get('/queries/categories'),
+        ]);
+
+        const brandsData = brandsResponse.data.data || [];
+        const categoriesData = categoriesResponse.data.data || [];
+
+        setBrandOptions(Array.isArray(brandsData)
+          ? brandsData.map((item: any) => ({ id: Number(item.id), name: item.name ?? '' })).filter((item: BrandOption) => item.id && item.name)
+          : []);
+        setCategoryOptions(Array.isArray(categoriesData)
+          ? categoriesData.map((item: any) => ({ id: Number(item.id), name: item.name ?? '' })).filter((item: CategoryOption) => item.id && item.name)
+          : []);
+      } catch {
+        setBrandOptions([]);
+        setCategoryOptions([]);
+      } finally {
+        setLookupLoading(false);
+      }
+    };
+
+    fetchLookups();
+  }, []);
+
+  useEffect(() => {
     if (formState.image) {
       const objectUrl = URL.createObjectURL(formState.image);
       setImagePreviewUrl(objectUrl);
@@ -88,9 +142,26 @@ const ProductListPage: React.FC = () => {
     return undefined;
   }, [formState.image, selectedProduct]);
 
+  useEffect(() => {
+    if (!selectedProduct || !modalMode || modalMode === 'create') {
+      return;
+    }
+
+    setFormState((current) => ({
+      ...current,
+      origin: selectedProduct.origin ?? current.origin,
+      material: selectedProduct.material ?? current.material,
+      brandId: selectedProduct.brandId?.toString() || current.brandId,
+      categoryIds: current.categoryIds.length > 0
+        ? current.categoryIds
+        : selectedProduct.categories?.map((category) => category.categoryId) ?? [],
+    }));
+  }, [modalMode, selectedProduct]);
+
   const openModal = (mode: ModalMode, product: Product | null = null) => {
     setFormError('');
     setFormSuccess('');
+    setCategoryPickerOpen(false);
     setModalMode(mode);
     setSelectedProduct(product);
 
@@ -99,8 +170,10 @@ const ProductListPage: React.FC = () => {
         name: product.name || '',
         price: product.price?.toString() || '',
         description: product.description || '',
-        brandName: product.brandName || '',
-        categoryName: product.categoryName || '',
+        origin: product.origin || '',
+        material: product.material || '',
+        brandId: product.brandId?.toString() || '',
+        categoryIds: product.categories?.map((category) => category.categoryId) || [],
         image: null,
       });
       return;
@@ -116,6 +189,7 @@ const ProductListPage: React.FC = () => {
     setFormError('');
     setFormSuccess('');
     setSubmitting(false);
+    setCategoryPickerOpen(false);
   };
 
   const getApiErrorMessage = (err: unknown, fallback: string) => {
@@ -155,8 +229,16 @@ const ProductListPage: React.FC = () => {
     payload.append('Name', formState.name.trim());
     payload.append('Description', formState.description.trim());
     payload.append('Price', formState.price.trim());
-    payload.append('BrandName', formState.brandName.trim());
-    payload.append('CategoryName', formState.categoryName.trim());
+    payload.append('Origin', formState.origin.trim());
+    payload.append('Material', formState.material.trim());
+
+    if (formState.brandId.trim()) {
+      payload.append('BrandId', formState.brandId.trim());
+    }
+
+    formState.categoryIds.forEach((categoryId) => {
+      payload.append('CategoryIds', categoryId.toString());
+    });
 
     if (formState.image) {
       payload.append('Image', formState.image);
@@ -172,7 +254,7 @@ const ProductListPage: React.FC = () => {
       return;
     }
 
-    if (!formState.name.trim() || !formState.description.trim() || !formState.price.trim() || !formState.brandName.trim() || !formState.categoryName.trim()) {
+    if (!formState.name.trim() || !formState.description.trim() || !formState.price.trim() || !formState.brandId.trim()) {
       setFormError('Please fill in all required fields before saving.');
       return;
     }
@@ -190,10 +272,10 @@ const ProductListPage: React.FC = () => {
       const requestConfig = { headers: { 'Content-Type': 'multipart/form-data' } };
 
       if (modalMode === 'create') {
-        await api.post('/comment/products', payload, requestConfig);
+        await api.post('/commands/products', payload, requestConfig);
         setFormSuccess('Product created successfully.');
       } else if (selectedProduct?.id) {
-        await api.put(`/comment/products/${selectedProduct.id}`, payload, requestConfig);
+        await api.put(`/commands/products/${selectedProduct.id}`, payload, requestConfig);
         setFormSuccess('Product updated successfully.');
       }
 
@@ -210,6 +292,10 @@ const ProductListPage: React.FC = () => {
     (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (p.brandName?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
+
+  const selectedBrand = brandOptions.find((item) => item.id.toString() === formState.brandId);
+  const selectedCategories = categoryOptions.filter((item) => formState.categoryIds.includes(item.id));
+  const compactEditMode = modalMode === 'update';
 
   return (
     <div >
@@ -392,35 +478,11 @@ const ProductListPage: React.FC = () => {
                 <X size={22} />
               </button>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap', marginBottom: '24px', fontSize: '14px', lineHeight: 1.45 }}>
                 <div>
-                  <h2 style={{ marginBottom: '8px' }}>
+                  <h2 style={{ marginBottom: '8px', fontSize: '22px' }}>
                     {modalMode === 'create' ? 'Create Product' : modalMode === 'update' ? 'Update Product' : 'View Product'}
                   </h2>
-                  <p style={{ color: 'var(--text-dim)' }}>
-                    {modalMode === 'create'
-                      ? 'Add a new product to the catalog.'
-                      : modalMode === 'update'
-                        ? 'Edit the selected product and keep the catalog current.'
-                        : 'Inspect product details in one place.'}
-                  </p>
-                </div>
-
-                <div style={{ minWidth: '220px', maxWidth: '320px', flex: 1 }}>
-                  <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {imagePreviewUrl ? (
-                      <img
-                        src={imagePreviewUrl}
-                        alt={selectedProduct?.name || formState.name || 'Product preview'}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '180px' }}
-                      />
-                    ) : (
-                      <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '24px' }}>
-                        <Package size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
-                        <div>No image selected</div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
 
@@ -437,136 +499,264 @@ const ProductListPage: React.FC = () => {
               )}
 
               {modalMode === 'view' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-                  <div className="premium-card" style={{ padding: '18px', background: 'var(--background)' }}>
-                    <div style={{ color: 'var(--text-dim)', fontSize: '13px', marginBottom: '8px' }}>Name</div>
-                    <div style={{ fontWeight: 700 }}>{selectedProduct?.name}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(260px, 0.9fr)', gap: '24px', alignItems: 'start' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Name</div>
+                      <div style={{ fontWeight: 700 }}>{selectedProduct?.name}</div>
+                    </div>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Price</div>
+                      <div style={{ fontWeight: 700 }}>${selectedProduct?.price}</div>
+                    </div>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Brand</div>
+                      <div style={{ fontWeight: 700 }}>{selectedProduct?.brandName}</div>
+                    </div>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Category</div>
+                      <div style={{ fontWeight: 700 }}>
+                        {selectedProduct?.categories?.length
+                          ? selectedProduct.categories.map((category) => category.categoryName).join(', ')
+                          : 'No category selected'}
+                      </div>
+                    </div>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Origin</div>
+                      <div style={{ fontWeight: 700 }}>{selectedProduct?.origin || 'Not provided'}</div>
+                    </div>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Material</div>
+                      <div style={{ fontWeight: 700 }}>{selectedProduct?.material || 'Not provided'}</div>
+                    </div>
+                    <div className="premium-card" style={{ padding: '16px', background: 'var(--background)', gridColumn: '1 / -1' }}>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px', marginBottom: '6px' }}>Description</div>
+                      <div style={{ lineHeight: 1.6 }}>{selectedProduct?.description}</div>
+                    </div>
                   </div>
-                  <div className="premium-card" style={{ padding: '18px', background: 'var(--background)' }}>
-                    <div style={{ color: 'var(--text-dim)', fontSize: '13px', marginBottom: '8px' }}>Price</div>
-                    <div style={{ fontWeight: 700 }}>${selectedProduct?.price}</div>
-                  </div>
-                  <div className="premium-card" style={{ padding: '18px', background: 'var(--background)' }}>
-                    <div style={{ color: 'var(--text-dim)', fontSize: '13px', marginBottom: '8px' }}>Brand</div>
-                    <div style={{ fontWeight: 700 }}>{selectedProduct?.brandName}</div>
-                  </div>
-                  <div className="premium-card" style={{ padding: '18px', background: 'var(--background)' }}>
-                    <div style={{ color: 'var(--text-dim)', fontSize: '13px', marginBottom: '8px' }}>Category</div>
-                    <div style={{ fontWeight: 700 }}>{selectedProduct?.categoryName}</div>
-                  </div>
-                  <div className="premium-card" style={{ padding: '18px', background: 'var(--background)', gridColumn: '1 / -1' }}>
-                    <div style={{ color: 'var(--text-dim)', fontSize: '13px', marginBottom: '8px' }}>Description</div>
-                    <div style={{ lineHeight: 1.6 }}>{selectedProduct?.description}</div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {imagePreviewUrl ? (
+                        <img
+                          src={imagePreviewUrl}
+                          alt={selectedProduct?.name || formState.name || 'Product preview'}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '280px' }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '20px' }}>
+                          <Package size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
+                          <div>No image selected</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmitProduct}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '18px' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Product Name</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={formState.name}
-                        onChange={(event) => setFormState((current) => ({ ...current, name: event.target.value }))}
-                        placeholder="Enter product name"
-                        disabled={submitting}
-                        required
-                      />
-                    </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(260px, 0.9fr)', gap: compactEditMode ? '16px' : '20px', alignItems: 'start', fontSize: '14px', lineHeight: 1.45 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: compactEditMode ? '12px' : '18px' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Product Name</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={formState.name}
+                          onChange={(event) => setFormState((current) => ({ ...current, name: event.target.value }))}
+                          placeholder="Enter product name"
+                          disabled={submitting}
+                          required
+                        />
+                      </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Price</label>
-                      <input
-                        type="number"
-                        className="form-input"
-                        min="0"
-                        step="0.01"
-                        value={formState.price}
-                        onChange={(event) => setFormState((current) => ({ ...current, price: event.target.value }))}
-                        placeholder="0.00"
-                        disabled={submitting}
-                        required
-                      />
-                    </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Price</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="0"
+                          step="0.01"
+                          value={formState.price}
+                          onChange={(event) => setFormState((current) => ({ ...current, price: event.target.value }))}
+                          placeholder="0.00"
+                          disabled={submitting}
+                          required
+                        />
+                      </div>
 
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Brand Name</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={formState.brandName}
-                        onChange={(event) => setFormState((current) => ({ ...current, brandName: event.target.value }))}
-                        placeholder="Enter brand name"
-                        disabled={submitting}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Category Name</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={formState.categoryName}
-                        onChange={(event) => setFormState((current) => ({ ...current, categoryName: event.target.value }))}
-                        placeholder="Enter category name"
-                        disabled={submitting}
-                        required
-                      />
-                    </div>
-
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Description</label>
-                      <textarea
-                        className="form-input"
-                        style={{ minHeight: '120px', resize: 'vertical' }}
-                        value={formState.description}
-                        onChange={(event) => setFormState((current) => ({ ...current, description: event.target.value }))}
-                        placeholder="Describe the product"
-                        disabled={submitting}
-                        required
-                      />
-                    </div>
-
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Product Image</label>
-                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <label
-                          className="premium-card"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '12px 16px',
-                            cursor: submitting ? 'not-allowed' : 'pointer',
-                            background: 'var(--background)',
-                          }}
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Brand</label>
+                        <select
+                          className="form-input"
+                          value={formState.brandId}
+                          onChange={(event) => setFormState((current) => ({ ...current, brandId: event.target.value }))}
+                          disabled={submitting || lookupLoading}
+                          required
                         >
-                          <Upload size={18} />
-                          <span>{formState.image ? 'Change image' : 'Choose image'}</span>
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/jpg,image/webp"
-                            onChange={(event) => setFormState((current) => ({ ...current, image: event.target.files?.[0] || null }))}
-                            disabled={submitting}
-                            style={{ display: 'none' }}
-                            required={modalMode === 'create'}
-                          />
-                        </label>
+                          <option value="">{lookupLoading ? 'Loading brands...' : 'Select a brand'}</option>
+                          {brandOptions.map((brand) => (
+                            <option key={brand.id} value={brand.id}>
+                              {brand.name}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedBrand && (
+                          <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--text-dim)' }}>
+                            Selected brand: {selectedBrand.name}
+                          </div>
+                        )}
+                      </div>
 
-                        <div style={{ color: 'var(--text-dim)', fontSize: '14px' }}>
-                          {formState.image ? formState.image.name : selectedProduct?.imageUrl ? 'Current image will remain unless you upload a new one.' : 'JPEG, PNG, JPG, or WEBP up to 5MB.'}
-                        </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Origin</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={formState.origin}
+                          onChange={(event) => setFormState((current) => ({ ...current, origin: event.target.value }))}
+                          placeholder="Enter origin"
+                          disabled={submitting}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Material</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={formState.material}
+                          onChange={(event) => setFormState((current) => ({ ...current, material: event.target.value }))}
+                          placeholder="Enter material"
+                          disabled={submitting}
+                        />
+                      </div>
+
+                      <div style={{ gridColumn: '1 / -1', position: 'relative' }}>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Categories</label>
+                        <button
+                          type="button"
+                          className="form-input"
+                          onClick={() => setCategoryPickerOpen((current) => !current)}
+                          disabled={submitting || lookupLoading}
+                          style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                        >
+                          <span>
+                            {lookupLoading
+                              ? 'Loading categories...'
+                              : selectedCategories.length > 0
+                                ? `${selectedCategories.length} category(s) selected`
+                                : 'Click to select one or more categories'}
+                          </span>
+                          <span style={{ color: 'var(--text-dim)' }}>{categoryPickerOpen ? '▲' : '▼'}</span>
+                        </button>
+
+                        {categoryPickerOpen && !lookupLoading && (
+                          <div className="premium-card" style={{ marginTop: '10px', padding: compactEditMode ? '14px' : '16px', background: 'var(--background)' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: compactEditMode ? '10px' : '12px' }}>
+                              {categoryOptions.map((category) => (
+                                <label key={category.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={formState.categoryIds.includes(category.id)}
+                                    onChange={(event) => {
+                                      const isChecked = event.target.checked;
+                                      setFormState((current) => ({
+                                        ...current,
+                                        categoryIds: isChecked
+                                          ? [...current.categoryIds, category.id]
+                                          : current.categoryIds.filter((item) => item !== category.id),
+                                      }));
+                                    }}
+                                    disabled={submitting}
+                                  />
+                                  <span>{category.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                            {categoryOptions.length === 0 && (
+                              <div style={{ color: 'var(--text-dim)', fontSize: '14px' }}>No categories available.</div>
+                            )}
+                          </div>
+                        )}
+
+                        {selectedCategories.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                            {selectedCategories.map((category) => (
+                              <span key={category.id} style={{ padding: '6px 10px', borderRadius: '999px', background: 'var(--accent-bg)', color: 'var(--text-main)', fontSize: '13px' }}>
+                                {category.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Description</label>
+                        <textarea
+                          className="form-input"
+                          style={{ minHeight: compactEditMode ? '96px' : '120px', resize: 'vertical' }}
+                          value={formState.description}
+                          onChange={(event) => setFormState((current) => ({ ...current, description: event.target.value }))}
+                          placeholder="Describe the product"
+                          disabled={submitting}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: compactEditMode ? '10px' : '12px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '13px' }}>Product Image</label>
+                      <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: compactEditMode ? '240px' : '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {imagePreviewUrl ? (
+                          <img
+                            src={imagePreviewUrl}
+                            alt={selectedProduct?.name || formState.name || 'Product preview'}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: compactEditMode ? '240px' : '280px' }}
+                          />
+                        ) : (
+                          <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '18px' }}>
+                            <Package size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
+                            <div>No image selected</div>
+                          </div>
+                        )}
+                      </div>
+
+                      <label
+                        className="premium-card"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          padding: compactEditMode ? '9px 13px' : '10px 14px',
+                          cursor: submitting ? 'not-allowed' : 'pointer',
+                          background: 'var(--background)',
+                          fontSize: '13px',
+                        }}
+                      >
+                        <Upload size={18} />
+                        <span>{formState.image ? 'Change image' : 'Choose image'}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/jpg,image/webp"
+                          onChange={(event) => setFormState((current) => ({ ...current, image: event.target.files?.[0] || null }))}
+                          disabled={submitting}
+                          style={{ display: 'none' }}
+                          required={modalMode === 'create'}
+                        />
+                      </label>
+
+                      <div style={{ color: 'var(--text-dim)', fontSize: '12px' }}>
+                        {formState.image ? formState.image.name : selectedProduct?.imageUrl ? 'Current image will remain unless you upload a new one.' : 'JPEG, PNG, JPG, or WEBP up to 5MB.'}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px', flexWrap: 'wrap' }}>
-                    <button type="button" className="premium-card" onClick={closeModal} style={{ padding: '12px 20px', background: 'var(--background)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: compactEditMode ? '22px' : '28px', flexWrap: 'wrap' }}>
+                    <button type="button" className="premium-card" onClick={closeModal} style={{ padding: '9px 15px', background: 'var(--background)', fontSize: '13px' }}>
                       Cancel
                     </button>
-                    <button type="submit" className="shimmer-button" disabled={submitting} style={{ minWidth: '160px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <button type="submit" className="shimmer-button" disabled={submitting} style={{ minWidth: '160px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}>
                       {submitting ? 'Saving...' : modalMode === 'create' ? 'Create Product' : 'Update Product'}
                     </button>
                   </div>
