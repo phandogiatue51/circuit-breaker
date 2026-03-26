@@ -2,6 +2,7 @@
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
+using APIGateaway.Services;
 
 namespace APIGateaway
 {
@@ -11,8 +12,12 @@ namespace APIGateaway
         public IAsyncPolicy<HttpResponseMessage> CategoryPolicy { get; }
         public IAsyncPolicy<HttpResponseMessage> ProductPolicy { get; }
 
-        public CircuitBreakerPolicyProvider()
+        private readonly ICacheService _cache;
+
+        public CircuitBreakerPolicyProvider(ICacheService cache)
         {
+            _cache = cache;
+
             BrandPolicy = CreateSuperPipeline("BRAND-SERVICE",
                 CircuitBreakerRegistry.BrandServiceManualControl,
                 CircuitBreakerRegistry.BrandServiceStateProvider);
@@ -36,7 +41,7 @@ namespace APIGateaway
                 TimeoutStrategy.Optimistic,
                 (context, timeSpan, task) =>
                 {
-                    Console.WriteLine($"⏱️ TIMEOUT: {serviceName} request timed out after {timeSpan.TotalSeconds}s");
+                    Console.WriteLine($"⏱TIMEOUT: {serviceName} request timed out after {timeSpan.TotalSeconds}s");
                     return Task.CompletedTask;
                 });
 
@@ -45,12 +50,21 @@ namespace APIGateaway
                 .Or<TimeoutRejectedException>()
                 .OrResult(r => !r.IsSuccessStatusCode)
                 .WaitAndRetryAsync(
-                    3, 
+                    3,
                     retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt))
                                    + TimeSpan.FromMilliseconds(Random.Shared.Next(0, 50)),
-                    onRetry: (outcome, timespan, retryCount, context) =>
+                    onRetry: async (outcome, timespan, retryCount, context) =>
                     {
-                        Console.WriteLine($"🔄 RETRY {retryCount}: {serviceName} - Waiting {timespan.TotalMilliseconds}ms");
+                        // Cache successful responses with the cache key from context
+                        if (outcome.Result?.IsSuccessStatusCode == true && context.ContainsKey("CacheKey"))
+                        {
+                            var cacheKey = context["CacheKey"] as string;
+                            if (!string.IsNullOrEmpty(cacheKey))
+                            {
+                                await _cache.SetCachedResponseAsync(serviceName, cacheKey, outcome.Result, TimeSpan.FromMinutes(5));
+                            }
+                        }
+                        Console.WriteLine($"RETRY {retryCount}: {serviceName} - Waiting {timespan.TotalMilliseconds}ms");
                     });
 
             var circuitBreakerOptions = new CircuitBreakerStrategyOptions<HttpResponseMessage>
@@ -68,17 +82,29 @@ namespace APIGateaway
 
                 OnOpened = (args) =>
                 {
-                    Console.WriteLine($"🔴 CIRCUIT OPENED: {serviceName} - Blocking for {args.BreakDuration.TotalSeconds}s");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine($"CIRCUIT OPENED: {serviceName} - Blocking for {args.BreakDuration.TotalSeconds:F0} seconds");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine("======================================================");
                     return ValueTask.CompletedTask;
                 },
                 OnClosed = (args) =>
                 {
-                    Console.WriteLine($"🟢 CIRCUIT CLOSED: {serviceName} - Healthy again");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine($"CIRCUIT CLOSED: {serviceName} - Healthy again");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine("======================================================");
                     return ValueTask.CompletedTask;
                 },
                 OnHalfOpened = (args) =>
                 {
-                    Console.WriteLine($"🟡 CIRCUIT HALF-OPEN: {serviceName} - Testing the waters");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine($"CIRCUIT HALF-OPEN: {serviceName} - Testing the waters");
+                    Console.WriteLine("======================================================");
+                    Console.WriteLine("======================================================");
                     return ValueTask.CompletedTask;
                 }
             };
@@ -94,31 +120,41 @@ namespace APIGateaway
                 .FallbackAsync(
                     fallbackAction: async (context, token) =>
                     {
-                        Console.WriteLine($"📋 FALLBACK: Using cached data for {serviceName}");
+                        Console.WriteLine($"FALLBACK: Using cached data for {serviceName}");
 
-                        if (FallbackCache.GetCachedResponse(serviceName) is HttpResponseMessage cached)
+                        // Try to get from real cache using the cache key from context
+                        if (context.ContainsKey("CacheKey"))
                         {
-                            var clone = new HttpResponseMessage(cached.StatusCode)
+                            var cacheKey = context["CacheKey"] as string;
+                            if (!string.IsNullOrEmpty(cacheKey))
                             {
-                                Content = await CloneContentAsync(cached.Content),
-                                ReasonPhrase = cached.ReasonPhrase
-                            };
-                            return clone;
+                                var cached = await _cache.GetCachedResponseAsync(serviceName, cacheKey);
+                                if (cached != null)
+                                {
+                                    var clone = new HttpResponseMessage(cached.StatusCode)
+                                    {
+                                        Content = await CloneContentAsync(cached.Content),
+                                        ReasonPhrase = cached.ReasonPhrase
+                                    };
+                                    return clone;
+                                }
+                            }
                         }
 
+                        // If no cache, return degraded response
                         return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
                         {
                             Content = new StringContent($@"{{
                                 ""service"": ""{serviceName}"",
                                 ""status"": ""degraded"",
-                                ""message"": ""Using fallback data"",
+                                ""message"": ""Service unavailable, no cached data"",
                                 ""timestamp"": ""{DateTime.Now:O}""
                             }}")
                         };
                     },
                     onFallbackAsync: async (outcome, context) =>
                     {
-                        Console.WriteLine($"⚠️ FALLBACK TRIGGERED: {serviceName} - Serving degraded response");
+                        Console.WriteLine($"FALLBACK TRIGGERED: {serviceName} - Serving degraded response");
                     });
 
             return fallbackPolicy

@@ -14,7 +14,7 @@ namespace BrandService
         public async Task<List<Brand>> GetAllAsync()
         {
             return await _context.Brands
-                .OrderBy(b => b.Name)
+                .OrderBy(b => b.Id)
                 .ToListAsync();
         }
 

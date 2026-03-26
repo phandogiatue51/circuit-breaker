@@ -382,20 +382,33 @@
       "Priority": 5
     },
 
-    // ==================== INTERNAL ROUTE ====================
-    {
-      "DownstreamPathTemplate": "/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7246
-        }
-      ],
-      "UpstreamPathTemplate": "/internal/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "Priority": 1
-    }
+     //==================== INTERNAL ROUTE ====================//
+    //{
+    //  "DownstreamPathTemplate": "/{everything}",
+    //  "DownstreamScheme": "https",
+    //  "DownstreamHostAndPorts": [
+    //    {
+    //      "Host": "localhost",
+    //      "Port": 7246
+    //    }
+    //  ],
+    //  "UpstreamPathTemplate": "/internal/{everything}",
+    //  "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+    //  "Priority": 1
+    //}
+    //{
+    //  "DownstreamPathTemplate": "/{everything}",
+    //  "DownstreamScheme": "http",
+    //  "DownstreamHostAndPorts": [
+    //    {
+    //      "Host": "127.0.0.1",
+    //      "Port": 1
+    //    }
+    //  ],
+    //  "UpstreamPathTemplate": "/internal/{everything}",
+    //  "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+    //  "Priority": 0
+    //}
   ],
   "SwaggerEndPoints": [
     {

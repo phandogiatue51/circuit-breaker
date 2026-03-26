@@ -1,4 +1,5 @@
 using APIGateaway;
+using APIGateaway.Services;
 using Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -10,16 +11,23 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Prometheus;
 using Serilog;
+using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Text;
 
 Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("System.Net.Http", LogEventLevel.Error)
+    .MinimumLevel.Override("Ocelot", LogEventLevel.Error)
+    .MinimumLevel.Override("APIGateaway.Controllers", LogEventLevel.Information)
+    .MinimumLevel.Override("APIGateaway.CircuitBreakerHandler", LogEventLevel.Information) 
     .WriteTo.Console(
         outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
         theme: AnsiConsoleTheme.Code
     )
-    .Enrich.FromLogContext()
-    .CreateBootstrapLogger();
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +49,9 @@ builder.Services.AddSingleton<CircuitBreakerPolicyProvider>();
 builder.Services.AddTransient<BrandCircuitBreakerHandler>();
 builder.Services.AddTransient<CategoryCircuitBreakerHandler>();
 builder.Services.AddTransient<ProductCircuitBreakerHandler>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheService, InMemoryCacheService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -95,12 +106,28 @@ builder.Services.Configure<Microsoft.Extensions.Hosting.HostOptions>(options =>
 });
 
 builder.Services.AddOpenTelemetry().ConfigureResource(res => res.AddService("APIGateaway")).WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddOtlpExporter()).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation());
+
 var app = builder.Build();
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
+app.MapWhen(context =>
+    context.Request.Path.StartsWithSegments("/api") ||
+    context.Request.Path.StartsWithSegments("/v1") ||
+    context.Request.Path.StartsWithSegments("/brands") ||
+    context.Request.Path.StartsWithSegments("/categories") ||
+    context.Request.Path.StartsWithSegments("/products") ||
+    context.Request.Path.StartsWithSegments("/auth"),
+    appBuilder =>
+    {
+        appBuilder.UseOcelot().Wait();
+    });
+
+app.MapMetrics();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -115,7 +142,5 @@ app.UseSwaggerForOcelotUI(opt =>
     opt.DownstreamSwaggerEndPointBasePath = "";
 });
 
-app.MapMetrics();
-app.UseOcelot().Wait();
 app.Run();
 

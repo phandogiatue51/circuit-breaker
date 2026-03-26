@@ -16,7 +16,7 @@ namespace ProductService
         {
             return await _context.Products
                 .Include(p => p.ProductCategories)
-                .OrderByDescending(p => p.CreatedAt)
+                .OrderBy(p => p.Id)
                 .ToListAsync();
         }
 
@@ -32,6 +32,7 @@ namespace ProductService
             return await _context.Products
                 .Include(p => p.ProductCategories)
                 .Where(p => p.BrandId == brandId)
+                .OrderBy(p => p.Id)
                 .ToListAsync();
         }
 
@@ -40,6 +41,7 @@ namespace ProductService
             return await _context.Products
                 .Include(p => p.ProductCategories)
                 .Where(p => p.ProductCategories.Any(pc => pc.CategoryId == categoryId))
+                .OrderBy(p => p.Id)
                 .ToListAsync();
         }
         

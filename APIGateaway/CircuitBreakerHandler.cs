@@ -1,5 +1,9 @@
+using APIGateaway.Services;
 using Polly;
 using Polly.CircuitBreaker;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace APIGateaway
 {
@@ -7,47 +11,77 @@ namespace APIGateaway
     {
         private readonly IAsyncPolicy<HttpResponseMessage> _policy;
         private readonly string _serviceName;
+        private readonly ICacheService _cache;
 
-        public CircuitBreakerHandler(IAsyncPolicy<HttpResponseMessage> policy, string serviceName)
+        public CircuitBreakerHandler(IAsyncPolicy<HttpResponseMessage> policy, string serviceName, ICacheService cache)
         {
             _policy = policy;
             _serviceName = serviceName;
+            _cache = cache;
             Console.WriteLine($"CircuitBreakerHandler CREATED for {serviceName} at {DateTime.Now:HH:mm:ss}");
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
+    HttpRequestMessage request,
+    CancellationToken cancellationToken)
         {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] CircuitBreakerHandler EXECUTING for {_serviceName}");
-            Console.WriteLine($"Request URL: {request.RequestUri}");
-            Console.WriteLine($"Policy HashCode: {_policy.GetHashCode()}");
+            // Create cache key from the request URL
+            var cacheKey = $"{request.Method}:{request.RequestUri?.PathAndQuery}";
+
+            // Create context and add the cache key so it can be accessed by retry and fallback policies
+            var context = new Context($"{_serviceName}-{Guid.NewGuid()}")
+            {
+                ["CacheKey"] = cacheKey  // ← THIS IS THE IMPORTANT PART
+            };
 
             try
             {
-                return await _policy.ExecuteAsync(async (context) =>
+                return await _policy.ExecuteAsync(async (ctx) =>
                 {
-                    Console.WriteLine($"Executing request inside circuit breaker for {_serviceName}");
-                    // CẦN PHẢI CLONE REQUEST, nếu không RetryPolicy sẽ văng lỗi "The request message was already sent" trong lần thử thứ 2
                     var requestClone = await CloneHttpRequestMessageAsync(request);
                     var response = await base.SendAsync(requestClone, cancellationToken);
-                    
-                    Console.WriteLine($"Response status: {(int)response.StatusCode} {response.StatusCode}");
+
+                    // If successful, cache the response with the URL as key
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await _cache.SetCachedResponseAsync(_serviceName, cacheKey, response, TimeSpan.FromMinutes(5));
+                        Console.WriteLine($"✅ CACHE SET: {_serviceName} - {cacheKey}");
+                    }
+
                     return response;
-                }, new Context($"{_serviceName}-{Guid.NewGuid()}"));
+                }, context);  // ← Pass the context with cacheKey
             }
             catch (BrokenCircuitException)
             {
-                Console.WriteLine($"CIRCUIT BREAKER OPEN - Request blocked for {_serviceName}");
-                return new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
+                var cachedResponse = await _cache.GetCachedResponseAsync(_serviceName, cacheKey);
+
+                if (cachedResponse != null)
                 {
-                    Content = new StringContent($"Circuit breaker is open for {_serviceName}. Service temporarily unavailable.")
+                    Console.WriteLine($"💾 CACHE HIT: {_serviceName} - {cacheKey}");
+                    return cachedResponse;
+                }
+
+                Console.WriteLine($"❌ CACHE MISS: {_serviceName} - {cacheKey}");
+
+                var payload = new
+                {
+                    service = _serviceName,
+                    status = "unavailable",
+                    message = "Service temporarily unavailable and no cached data found",
+                    cacheKey = cacheKey,
+                    timestamp = DateTime.UtcNow.ToString("O")
                 };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception in circuit breaker: {ex.Message}");
-                throw;
+
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+
+                var response = new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                response.Headers.Add("Access-Control-Allow-Origin", "*");
+
+                return response;
             }
         }
 
@@ -88,8 +122,8 @@ namespace APIGateaway
 
     public class BrandCircuitBreakerHandler : CircuitBreakerHandler
     {
-        public BrandCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider)
-            : base(policyProvider.BrandPolicy, "BRAND-SERVICE")
+        public BrandCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
+            : base(policyProvider.BrandPolicy, "BRAND-SERVICE", cache) // ← Added cache parameter
         {
             Console.WriteLine("BrandCircuitBreakerHandler CREATED");
         }
@@ -97,8 +131,8 @@ namespace APIGateaway
 
     public class CategoryCircuitBreakerHandler : CircuitBreakerHandler
     {
-        public CategoryCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider)
-            : base(policyProvider.CategoryPolicy, "CATEGORY-SERVICE")
+        public CategoryCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
+            : base(policyProvider.CategoryPolicy, "CATEGORY-SERVICE", cache) // ← Added cache parameter
         {
             Console.WriteLine("CategoryCircuitBreakerHandler CREATED");
         }
@@ -106,8 +140,8 @@ namespace APIGateaway
 
     public class ProductCircuitBreakerHandler : CircuitBreakerHandler
     {
-        public ProductCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider)
-            : base(policyProvider.ProductPolicy, "PRODUCT-SERVICE")
+        public ProductCircuitBreakerHandler(CircuitBreakerPolicyProvider policyProvider, ICacheService cache)
+            : base(policyProvider.ProductPolicy, "PRODUCT-SERVICE", cache) // ← Added cache parameter
         {
             Console.WriteLine("ProductCircuitBreakerHandler CREATED");
         }

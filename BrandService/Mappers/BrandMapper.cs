@@ -14,6 +14,7 @@ public static class BrandMapper
             CreatedAt = brand.CreatedAt,
             UpdatedAt = brand.UpdatedAt,
             ImageUrl = brand.ImageUrl,
+            IsActive = brand.IsActive
         };
     }
 }
