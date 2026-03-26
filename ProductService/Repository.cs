@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProductService
 {
@@ -14,10 +14,17 @@ namespace ProductService
 
         public async Task<List<Product>> GetAllAsync()
         {
-            return await _context.Products
-                .Include(p => p.ProductCategories)
-                .OrderBy(p => p.Id)
-                .ToListAsync();
+            try
+            {
+                return await _context.Products
+                    .Include(p => p.ProductCategories)
+                    .OrderBy(p => p.Id)
+                    .ToListAsync();
+            }
+            catch
+            {
+                return new List<Product>();
+            }
         }
 
         public async Task<Product?> GetByIdAsync(int id)

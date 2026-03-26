@@ -14,6 +14,15 @@ export interface Product {
   imageUrl?: string;
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  description: string;
+  country?: string;
+  website?: string;
+  imageUrl?: string;
+}
+
 export interface BrandOption {
   id: number;
   name: string;
@@ -22,6 +31,14 @@ export interface BrandOption {
 export interface CategoryOption {
   id: number;
   name: string;
+}
+
+export type ModalMode = 'view' | 'create' | 'update';
+
+export interface BrandFormState {
+  name: string;
+  description: string;
+  image: File | null;
 }
 
 export interface ProductFormState {
@@ -33,6 +50,14 @@ export interface ProductFormState {
   brandId: string;
   categoryIds: number[];
   image: File | null;
+}
+
+export interface BrandEventItem {
+  id: number;
+  brandId: number;
+  eventType: string;
+  payload: string;
+  createdAt: string;
 }
 
 export interface ProductEventItem {
