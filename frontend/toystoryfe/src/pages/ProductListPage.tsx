@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import api from '../api/axios';
-import { AnimatePresence } from 'framer-motion';
-import { Package } from 'lucide-react';
+import { getApiErrorMessage } from '../utils/errorUtils';
 import { useAuth } from '../context/AuthContext';
 import type { BrandOption, CategoryOption, Product, ProductFormState } from '../types/types';
-import ProductCard from '../components/Product/ProductCard';
-
 import ProductHeader from '../components/Product/ProductHeader';
 import ProductModal from '../components/Product/ProductModal';
+import ProductList from '../components/Product/ProductList';
 type ModalMode = 'view' | 'create' | 'update';
 
 const emptyFormState: ProductFormState = {
@@ -145,36 +142,7 @@ const ProductListPage: React.FC = () => {
     setSubmitting(false);
   };
 
-  const getApiErrorMessage = (err: unknown, fallback: string) => {
-    if (!axios.isAxiosError(err)) {
-      return fallback;
-    }
 
-    const status = err.response?.status;
-    const data = err.response?.data as any;
-    const validationErrors = data?.errors;
-    const validationMessage = Array.isArray(validationErrors)
-      ? validationErrors.flatMap((item: any) => Object.values(item)).filter(Boolean).join(', ')
-      : '';
-
-    const rawMessage = typeof data?.message === 'string' ? data.message : '';
-    const title = typeof data?.title === 'string' ? data.title : '';
-    const detail = typeof data?.detail === 'string' ? data.detail : '';
-
-    const message = [detail, validationMessage, title]
-      .find((item) => item && item.trim().length > 0 && item !== 'Success')
-      || (rawMessage && rawMessage !== 'Success' ? rawMessage : '');
-
-    if (message) {
-      return message;
-    }
-
-    if (status) {
-      return `${status} ${fallback}`;
-    }
-
-    return fallback;
-  };
 
   const buildFormData = () => {
     const payload = new FormData();
@@ -265,35 +233,15 @@ const ProductListPage: React.FC = () => {
         onSortChange={() => setSortDesc(!sortDesc)}
       />
 
-      {loading ? (
-        <div className="dashboard-grid">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="premium-card" style={{ height: '400px', background: 'var(--border)', opacity: 0.3 }}></div>
-          ))}
-        </div>
-      ) : error ? (
-        <div style={{ textAlign: 'center', padding: '80px', color: 'var(--error)' }}>
-          <Package size={64} style={{ opacity: 0.2, marginBottom: '24px' }} />
-          <h3>{error}</h3>
-          <button onClick={() => window.location.reload()} className="shimmer-button" style={{ marginTop: '24px' }}>Try Again</button>
-        </div>
-      ) : (
-        <div className="dashboard-grid">
-          <AnimatePresence>
-            {filteredProducts.map((product, idx) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                idx={idx}
-                isAdmin={isAdmin}
-                onDelete={(p) => void handleDeleteProduct(p)}
-                onView={(p) => openModal('view', p)}
-                onEdit={(p) => openModal('update', p)}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
+      <ProductList
+        loading={loading}
+        error={error}
+        filteredProducts={filteredProducts}
+        isAdmin={isAdmin}
+        onDelete={(p) => void handleDeleteProduct(p)}
+        onView={(p) => openModal('view', p)}
+        onEdit={(p) => openModal('update', p)}
+      />
 
       <ProductModal
         modalMode={modalMode}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Package, History } from 'lucide-react';
 import api from '../../api/axios';
+import { getApiErrorMessage } from '../../utils/errorUtils';
 import type { Product, ProductEventItem } from '../../types/types';
 
 interface ProductViewProps {
@@ -14,24 +14,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product }) => {
   const [historyError, setHistoryError] = useState('');
   const [historyItems, setHistoryItems] = useState<ProductEventItem[]>([]);
 
-  const getApiErrorMessage = (err: unknown, fallback: string) => {
-    if (!axios.isAxiosError(err)) return fallback;
-    const status = err.response?.status;
-    const data = err.response?.data as any;
-    const validationErrors = data?.errors;
-    const validationMessage = Array.isArray(validationErrors)
-      ? validationErrors.flatMap((item: any) => Object.values(item)).filter(Boolean).join(', ')
-      : '';
-    const rawMessage = typeof data?.message === 'string' ? data.message : '';
-    const title = typeof data?.title === 'string' ? data.title : '';
-    const detail = typeof data?.detail === 'string' ? data.detail : '';
-    const message = [detail, validationMessage, title]
-      .find((item) => item && item.trim().length > 0 && item !== 'Success')
-      || (rawMessage && rawMessage !== 'Success' ? rawMessage : '');
-    if (message) return message;
-    if (status) return `${status} ${fallback}`;
-    return fallback;
-  };
+
 
   const handleLoadProductHistory = async () => {
     if (!product?.id) return;
