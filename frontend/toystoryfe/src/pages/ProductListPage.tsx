@@ -58,7 +58,7 @@ const ProductListPage: React.FC = () => {
       const productsData = response.data.data || [];
       setProducts(Array.isArray(productsData) ? productsData : []);
     } catch {
-      setError('Failed to load products. Service might be temporarily unavailable.');
+      setError('Product Service might be temporarily unavailable.');
     } finally {
       setLoading(false);
     }

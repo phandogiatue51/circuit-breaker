@@ -1,4 +1,5 @@
 ﻿using DTOs;
+using DTOs.Exceptions;  // ← Make sure this using is added
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Polly.CircuitBreaker;
@@ -38,17 +39,25 @@ namespace Clients
                     return null;
                 }
 
+                // Treat 5xx / service unavailable responses as service-level failures
+                if ((int)response.StatusCode >= 500 || response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
+                    response.StatusCode == System.Net.HttpStatusCode.BadGateway || response.StatusCode == System.Net.HttpStatusCode.GatewayTimeout)
+                {
+                    _logger.LogError("Downstream CategoryService returned {StatusCode} for id {CategoryId}", response.StatusCode, id);
+                    throw new CircuitBreakerOpenException("CATEGORY-SERVICE");
+                }
+
                 return null;
             }
             catch (BrokenCircuitException ex)
             {
                 _logger.LogError(ex, "Category service circuit is OPEN or ISOLATED. Unable to call service for ID {CategoryId}", id);
-                throw new Exception("Category service is currently unavailable (circuit open)", ex);
+                throw new CircuitBreakerOpenException("CATEGORY-SERVICE");
             }
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "HTTP error calling CategoryService for ID {CategoryId}", id);
-                throw new Exception("Category service is unavailable", ex);
+                throw new CircuitBreakerOpenException("CATEGORY-SERVICE");
             }
             catch (Exception ex)
             {
@@ -74,6 +83,14 @@ namespace Clients
                     return apiResponse?.Data ?? new List<CategoryDto>();
                 }
 
+                // Treat 5xx / service unavailable responses as service-level failures
+                if ((int)response.StatusCode >= 500 || response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
+                    response.StatusCode == System.Net.HttpStatusCode.BadGateway || response.StatusCode == System.Net.HttpStatusCode.GatewayTimeout)
+                {
+                    _logger.LogError("Downstream CategoryService returned {StatusCode} for GetByIds", response.StatusCode);
+                    throw new CircuitBreakerOpenException("CATEGORY-SERVICE");
+                }
+
                 _logger.LogWarning("Failed to get categories by IDs: {Ids}", string.Join(",", ids));
                 return new List<CategoryDto>();
             }
@@ -81,7 +98,12 @@ namespace Clients
             {
                 _logger.LogError(ex, "Category service circuit is OPEN or ISOLATED. Unable to call service for IDs: {Ids}",
                     string.Join(",", ids));
-                throw new Exception("Category service is currently unavailable (circuit open)", ex);
+                throw new CircuitBreakerOpenException("CATEGORY-SERVICE");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error calling CategoryService for IDs: {Ids}", string.Join(",", ids));
+                throw new CircuitBreakerOpenException("CATEGORY-SERVICE");
             }
             catch (Exception ex)
             {
@@ -97,7 +119,7 @@ namespace Clients
                 var category = await GetByIdAsync(id);
                 return category != null;
             }
-            catch (BrokenCircuitException)
+            catch (CircuitBreakerOpenException)
             {
                 _logger.LogWarning("Cannot check existence for category {CategoryId} - circuit is open", id);
                 throw;

@@ -1,7 +1,9 @@
 ﻿using DTOs;
+using DTOs.Exceptions;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Polly.CircuitBreaker;
+using System.Net;
+using System.Text.Json;
 
 namespace Clients
 {
@@ -32,23 +34,34 @@ namespace Clients
                     return apiResponse?.Data;
                 }
 
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning("Brand with ID {BrandId} not found", id);
                     return null;
                 }
 
+                // Treat 5xx / service unavailable responses as service-level failures
+                if ((int)response.StatusCode >= 500 || response.StatusCode == HttpStatusCode.ServiceUnavailable ||
+                    response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
+                {
+                    _logger.LogError("Downstream BrandService returned {StatusCode} for id {BrandId}", response.StatusCode, id);
+                    // Throw an explicit circuit/service-unavailable exception so GlobalExceptionHandler produces 503
+                    throw new CircuitBreakerOpenException("BRAND-SERVICE");
+                }
+
+                // For other non-success codes, log and treat as not found (or change behavior as needed)
+                _logger.LogWarning("Unexpected status {StatusCode} from BrandService for id {BrandId}", response.StatusCode, id);
                 return null;
             }
             catch (BrokenCircuitException ex)
             {
                 _logger.LogError(ex, "Brand service circuit is OPEN or ISOLATED. Unable to call service for ID {BrandId}", id);
-                throw new Exception("Brand service is currently unavailable (circuit open)", ex);
+                throw new CircuitBreakerOpenException("BRAND-SERVICE");
             }
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "HTTP error calling BrandService for ID {BrandId}", id);
-                throw new Exception("Brand service is unavailable", ex);
+                throw new CircuitBreakerOpenException("BRAND-SERVICE");
             }
             catch (Exception ex)
             {

@@ -64,7 +64,7 @@ const BrandListPage: React.FC = () => {
       const brandsData = response.data.data || [];
       setBrands(Array.isArray(brandsData) ? brandsData : []);
     } catch (err: any) {
-      setError('Failed to load brands. Service might be temporarily unavailable.');
+      setError('Brand Service might be temporarily unavailable.');
     } finally {
       setLoading(false);
     }
@@ -569,16 +569,16 @@ const BrandListPage: React.FC = () => {
                     </div>
                   </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--accent-bg)', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {imagePreviewUrl ? (
                         <img
                           src={imagePreviewUrl}
                           alt={selectedBrand?.name || formState.name || 'Brand preview'}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '220px' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '220px' }}
                         />
                       ) : (
-                          <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '16px' }}>
+                        <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '16px' }}>
                           <Building size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
                           <div>No image selected</div>
                         </div>

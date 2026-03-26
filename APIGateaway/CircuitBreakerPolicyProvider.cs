@@ -1,10 +1,11 @@
-﻿using Clients;
+﻿using APIGateaway.Services;
+using Clients;
+using Grpc.Net.Client.Configuration;
 using Polly;
 using Polly.CircuitBreaker;
-using Polly.Timeout;
-using Polly.Retry;
 using Polly.Fallback;
-using APIGateaway.Services;
+using Polly.Retry;
+using Polly.Timeout;
 using System.Net;
 
 namespace APIGateaway
@@ -43,55 +44,55 @@ namespace APIGateaway
             CircuitBreakerStateProvider stateProvider)
         {
             // 1. Timeout Pipeline
-            var timeoutPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
-                .AddTimeout(TimeSpan.FromSeconds(10))
-                .Build();
-            var timeoutPolicy = timeoutPipeline.AsAsyncPolicy();
+            //var timeoutPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
+            //    .AddTimeout(TimeSpan.FromSeconds(1))
+            //    .Build();
+            //var timeoutPolicy = timeoutPipeline.AsAsyncPolicy();
 
-            // 2. Retry Pipeline - Polly V8
-            var retryPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
-                .AddRetry(new RetryStrategyOptions<HttpResponseMessage>
-                {
-                    MaxRetryAttempts = 3,
-                    Delay = TimeSpan.FromSeconds(5),
-                    BackoffType = DelayBackoffType.Exponential,
-                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-                        .Handle<HttpRequestException>()
-                        .Handle<TimeoutRejectedException>()
-                        .HandleResult(response => (int)response.StatusCode >= 500),
-                    OnRetry = args =>
-                    {
-                        // Access context properly in Polly V8
-                        if (args.Context.Properties.TryGetValue(new ResiliencePropertyKey<string>("CacheKey"), out var cacheKey))
-                        {
-                            if (!string.IsNullOrEmpty(cacheKey) && args.Outcome.Result?.IsSuccessStatusCode == true)
-                            {
-                                // Fire and forget caching (or await properly if needed)
-                                _ = _cache.SetCachedResponseAsync(serviceName, cacheKey, args.Outcome.Result, TimeSpan.FromMinutes(5));
-                            }
-                        }
+            //// 2. Retry Pipeline - Polly V8
+            //var retryPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
+            //    .AddRetry(new RetryStrategyOptions<HttpResponseMessage>
+            //    {
+            //        MaxRetryAttempts = 2,
+            //        Delay = TimeSpan.FromSeconds(1),
+            //        BackoffType = DelayBackoffType.Constant,
+            //        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+            //            .Handle<HttpRequestException>()
+            //            .Handle<TimeoutRejectedException>()
+            //            .HandleResult(response => (int)response.StatusCode >= 500),
+            //        OnRetry = args =>
+            //        {
+            //            // Access context properly in Polly V8
+            //            if (args.Context.Properties.TryGetValue(new ResiliencePropertyKey<string>("CacheKey"), out var cacheKey))
+            //            {
+            //                if (!string.IsNullOrEmpty(cacheKey) && args.Outcome.Result?.IsSuccessStatusCode == true)
+            //                {
+            //                    // Fire and forget caching (or await properly if needed)
+            //                    _ = _cache.SetCachedResponseAsync(serviceName, cacheKey, args.Outcome.Result, TimeSpan.FromMinutes(5));
+            //                }
+            //            }
 
-                        _logger.LogInformation(
-                            "RETRY {AttemptNumber} for {ServiceName} - Waiting {Delay}ms - Reason: {Reason}",
-                            args.AttemptNumber,
-                            serviceName,
-                            args.RetryDelay.TotalMilliseconds,
-                            args.Outcome.Exception?.Message ?? args.Outcome.Result?.StatusCode.ToString()
-                        );
+            //            _logger.LogInformation(
+            //                "RETRY {AttemptNumber} for {ServiceName} - Waiting {Delay}ms - Reason: {Reason}",
+            //                args.AttemptNumber,
+            //                serviceName,
+            //                args.RetryDelay.TotalMilliseconds,
+            //                args.Outcome.Exception?.Message ?? args.Outcome.Result?.StatusCode.ToString()
+            //            );
 
-                        return default;
-                    }
-                })
-                .Build();
-            var retryPolicy = retryPipeline.AsAsyncPolicy();
+            //            return default;
+            //        }
+            //    })
+            //    .Build();
+            //var retryPolicy = retryPipeline.AsAsyncPolicy();
 
             // 3. Circuit Breaker Pipeline - Polly V8
             var circuitBreakerOptions = new CircuitBreakerStrategyOptions<HttpResponseMessage>
             {
                 FailureRatio = 0.5,
-                SamplingDuration = TimeSpan.FromSeconds(10),
+                SamplingDuration = TimeSpan.FromSeconds(30),
                 MinimumThroughput = 3,
-                BreakDuration = TimeSpan.FromSeconds(15),
+                BreakDuration = TimeSpan.FromSeconds(20),
                 ManualControl = manualControl,
                 StateProvider = stateProvider,
                 ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
@@ -100,19 +101,28 @@ namespace APIGateaway
                     .HandleResult(response => (int)response.StatusCode >= 500),
                 OnOpened = args =>
                 {
-                    _logger.LogWarning("CIRCUIT OPENED: {ServiceName} at {Time}", serviceName, DateTime.Now);
+                    Console.WriteLine("=============================================");
+                    Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
+                    Console.WriteLine("CIRCUIT BREAKER OPENED!");
+                    Console.WriteLine($"Will stay open for {args.BreakDuration.TotalSeconds} seconds");
+                    Console.WriteLine("=============================================");
                     return default;
                 },
-
                 OnClosed = args =>
                 {
-                    _logger.LogInformation("CIRCUIT CLOSED: {ServiceName} - Healthy again", serviceName);
+                    Console.WriteLine("=============================================");
+                    Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
+                    Console.WriteLine("CIRCUIT BREAKER CLOSED!");
+                    Console.WriteLine("=============================================");
                     return default;
                 },
-
                 OnHalfOpened = args =>
                 {
-                    _logger.LogInformation("CIRCUIT HALF-OPEN: {ServiceName} - Testing the waters", serviceName);
+                    Console.WriteLine("=============================================");
+                    Console.WriteLine($"TIME: {DateTime.Now:HH:mm:ss}");
+                    Console.WriteLine("CIRCUIT HALF-OPEN!");
+                    Console.WriteLine("Testing if service is healthy...");
+                    Console.WriteLine("=============================================");
                     return default;
                 }
             };
@@ -173,11 +183,13 @@ namespace APIGateaway
                 .Build();
             var fallbackPolicy = fallbackPipeline.AsAsyncPolicy();
 
-            // Combine policies
-            return fallbackPolicy
-                .WrapAsync(circuitBreakerPolicy)
-                .WrapAsync(retryPolicy)
-                .WrapAsync(timeoutPolicy);
+            //return circuitBreakerPolicy
+            //    .WrapAsync(
+            //        fallbackPolicy.WrapAsync(
+            //            retryPolicy.WrapAsync(timeoutPolicy)
+            //        )
+            //    );
+            return circuitBreakerPolicy;
         }
 
         private async Task<HttpContent> CloneContentAsync(HttpContent content)

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Polly.CircuitBreaker;
+using DTOs.Exceptions; 
 
 namespace Clients
 {
@@ -36,6 +37,13 @@ namespace Clients
                 {
                     _logger.LogWarning("Product with ID {ProductId} not found", id);
                     return null;
+                }
+
+                if ((int)response.StatusCode >= 500 || response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
+                    response.StatusCode == System.Net.HttpStatusCode.BadGateway || response.StatusCode == System.Net.HttpStatusCode.GatewayTimeout)
+                {
+                    _logger.LogError("Downstream ProductService returned {StatusCode} for id {ProductId}", response.StatusCode, id);
+                    throw new CircuitBreakerOpenException("PRODUCT-SERVICE");
                 }
 
                 return null;

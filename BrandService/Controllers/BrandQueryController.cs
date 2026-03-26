@@ -53,38 +53,38 @@ namespace BrandService.Controllers
             }
         }
 
-        //[HttpGet("{id}")]
-        //[AllowAnonymous]
-        //public async Task<ActionResult<ApiResponse<BrandDto>>> GetById(int id)
-        //{
-        //    var path = HttpContext.Request.Path.ToString();
-
-        //    try
-        //    {
-        //        var query = new GetBrandQuery { Id = id };
-        //        var product = await _queryHandler.Handle(query);
-
-        //        if (product == null)
-        //        {
-        //            return NotFound(ApiResponse<BrandDto>.Error(404, $"Brand with Id {id} not found", path, "NOT_FOUND"));
-        //        }
-
-        //        return Ok(ApiResponse<BrandDto>.Success(product, path, "Brand retrieved successfully!"));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error getting product {Id}", id);
-        //        return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Error when retrieving brand", path, "INTERNAL_ERROR"));
-        //    }
-        //}
-
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<BrandDto>>> GetById(int id)
         {
-            // Force an error for testing
-            throw new InvalidOperationException("This is a forced test exception.");
+            var path = HttpContext.Request.Path.ToString();
+
+            try
+            {
+                var query = new GetBrandQuery { Id = id };
+                var product = await _queryHandler.Handle(query);
+
+                if (product == null)
+                {
+                    return NotFound(ApiResponse<BrandDto>.Error(404, $"Brand with Id {id} not found", path, "NOT_FOUND"));
+                }
+
+                return Ok(ApiResponse<BrandDto>.Success(product, path, "Brand retrieved successfully!"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting product {Id}", id);
+                return StatusCode(500, ApiResponse<ProductDto>.Error(500, "Error when retrieving brand", path, "INTERNAL_ERROR"));
+            }
         }
+
+        //[HttpGet("{id}")]
+        //[AllowAnonymous]
+        //public async Task<ActionResult<ApiResponse<BrandDto>>> GetById(int id)
+        //{
+        //    // Force an error for testing
+        //    throw new InvalidOperationException("This is a forced test exception.");
+        //}
 
         [HttpGet("{id}/events")]
         [AllowAnonymous]

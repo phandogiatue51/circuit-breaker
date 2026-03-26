@@ -38,14 +38,52 @@ namespace ProductService.Commands
             _logger.LogInformation("Handling CreateProductCommand: {Name}", command.Name);
 
             // Validate brand
-            var brand = await _brandClient.GetByIdAsync(command.BrandId);
+            BrandDto? brand = null;
+            try
+            {
+                brand = await _brandClient.GetByIdAsync(command.BrandId);
+            }
+            catch (CircuitBreakerOpenException ex)
+            {
+                _logger.LogError(ex, "Brand service unavailable when creating product");
+                throw new ServiceUnavailableException(
+                    $"Brand service is temporarily unavailable. Please try again later.",
+                    "BRAND_SERVICE_UNAVAILABLE");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Brand service unavailable when creating product");
+                throw new ServiceUnavailableException(
+                    $"Brand service is temporarily unavailable. Please try again later.",
+                    "BRAND_SERVICE_UNAVAILABLE");
+            }
+
             if (brand == null)
             {
                 throw new BadRequestException($"Brand with ID {command.BrandId} not found", "BRAND_NOT_FOUND");
             }
 
             // Validate categories
-            var categories = await _categoryClient.GetByIdsAsync(command.CategoryIds);
+            List<CategoryDto>? categories = null;
+            try
+            {
+                categories = await _categoryClient.GetByIdsAsync(command.CategoryIds);
+            }
+            catch (CircuitBreakerOpenException ex)
+            {
+                _logger.LogError(ex, "Category service unavailable when creating product");
+                throw new ServiceUnavailableException(
+                    $"Category service is temporarily unavailable. Please try again later.",
+                    "CATEGORY_SERVICE_UNAVAILABLE");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Category service unavailable when creating product");
+                throw new ServiceUnavailableException(
+                    $"Category service is temporarily unavailable. Please try again later.",
+                    "CATEGORY_SERVICE_UNAVAILABLE");
+            }
+
             if (categories.Count != command.CategoryIds.Count)
             {
                 var foundIds = categories.Select(c => c.Id).ToList();
@@ -132,10 +170,28 @@ namespace ProductService.Commands
             if (command.IsActive.HasValue)
                 product.IsActive = command.IsActive.Value;
 
-            // Update brand if changed
             if (command.BrandId.HasValue && command.BrandId.Value != product.BrandId)
             {
-                var brand = await _brandClient.GetByIdAsync(command.BrandId.Value);
+                BrandDto? brand = null;
+                try
+                {
+                    brand = await _brandClient.GetByIdAsync(command.BrandId.Value);
+                }
+                catch (CircuitBreakerOpenException ex)
+                {
+                    _logger.LogError(ex, "Brand service unavailable when updating product");
+                    throw new ServiceUnavailableException(
+                        $"Brand service is temporarily unavailable. Please try again later.",
+                        "BRAND_SERVICE_UNAVAILABLE");
+                }
+                catch (HttpRequestException ex)
+                {
+                    _logger.LogError(ex, "Brand service unavailable when updating product");
+                    throw new ServiceUnavailableException(
+                        $"Brand service is temporarily unavailable. Please try again later.",
+                        "BRAND_SERVICE_UNAVAILABLE");
+                }
+
                 if (brand == null)
                 {
                     throw new BadRequestException($"Brand with ID {command.BrandId} not found", "BRAND_NOT_FOUND");
@@ -144,7 +200,7 @@ namespace ProductService.Commands
                 product.BrandName = brand.Name;
             }
 
-            // Update categories if changed
+            // Update categories if changed with proper error handling
             if (command.CategoryIds != null)
             {
                 if (command.CategoryIds.Any())
@@ -152,7 +208,26 @@ namespace ProductService.Commands
                     var validCategoryIds = command.CategoryIds.Where(id => id > 0).ToList();
                     if (validCategoryIds.Any())
                     {
-                        var categories = await _categoryClient.GetByIdsAsync(validCategoryIds);
+                        List<CategoryDto>? categories = null;
+                        try
+                        {
+                            categories = await _categoryClient.GetByIdsAsync(validCategoryIds);
+                        }
+                        catch (CircuitBreakerOpenException ex)
+                        {
+                            _logger.LogError(ex, "Category service unavailable when updating product");
+                            throw new ServiceUnavailableException(
+                                $"Category service is temporarily unavailable. Please try again later.",
+                                "CATEGORY_SERVICE_UNAVAILABLE");
+                        }
+                        catch (HttpRequestException ex)
+                        {
+                            _logger.LogError(ex, "Category service unavailable when updating product");
+                            throw new ServiceUnavailableException(
+                                $"Category service is temporarily unavailable. Please try again later.",
+                                "CATEGORY_SERVICE_UNAVAILABLE");
+                        }
+
                         if (categories.Count != validCategoryIds.Count)
                         {
                             var foundIds = categories.Select(c => c.Id).ToList();
